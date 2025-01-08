@@ -3,4 +3,4 @@
 
 ``image.bin`` MUST be a SH1MMER Legacy image.
 
-Further instruction will be added later.
+Further instructions will be added later.
