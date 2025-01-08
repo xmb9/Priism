@@ -108,13 +108,19 @@ installcros() {
 }
 
 rebootdevice() {
-	echo "Rebooting..."
-	reboot
+	if [[ releaseBuild -eq 1 ]]; then
+		echo "Rebooting..."
+		reboot
+	else
+		echo "Use the bash shell to reboot."
 }
 
 shutdowndevice() {
-	echo "Shutting down..."
-	shutdown -h now
+	if [[ releaseBuild -eq 1 ]]; then
+		echo "Shutting down..."
+		shutdown -h now
+	else
+		echo "Use the bash shell to shutdown."
 }
 
 exitdebug() {
