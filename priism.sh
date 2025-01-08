@@ -98,6 +98,7 @@ installcros() {
 		echo "Mount process failed! Exit code was ${result}."
 		echo "This may be a bug! Please check your recovery image,"
 		echo "and if it looks fine, report it to the GitHub repo!"
+  		break
 	fi
 
 	mount -t proc /proc $recoroot/proc/
