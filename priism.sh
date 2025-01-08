@@ -10,7 +10,7 @@ if [[ $releaseBuild -eq 1 ]]; then
 fi
 
 funText() {
-	splashText=("       Triangle is love, triangle is life.", "             Placeholder splash text")
+	splashText=("       Triangle is love, triangle is life." "             Placeholder splash text")
   	selectedSplashText=${splashText[$RANDOM % ${#splashText[@]}]}
 	echo " "
    	echo "$selectedSplashText"
@@ -46,7 +46,7 @@ mkdir /mnt/shimroot
 mkdir /mnt/recoroot
 
 priism_images="$(cgpt find -l PRIISM_IMAGES | head -n 1 | grep --color=never /dev/)"
-mount $priism_images /mnt/priism
+# mount $priism_images /mnt/priism
 
 recochoose=(/mnt/priism/recovery/*)
 shimchoose=(/mnt/priism/shims/*)
@@ -119,6 +119,10 @@ shutdowndevice() {
 
 exitdebug() {
 	if [[ releaseBuild -eq 0 ]]; then
+		rm -rf /mnt/recoroot
+		rm -rf /mnt/priism
+		rm -rf /mnt/shimroot
+		rm -rf /mnt/new_root
 		exit
 	else
 		echo "Invalid option"
