@@ -151,10 +151,10 @@ while true; do
 	read -p "> " choice
 	case "$choice" in
 	1| b | B) bash ;;
-	2 | r | R) rebootdevice ;;
-	3 | p | P) shutdowndevice ;;
-	4 | s | S) shimboot ;;
-	5 | i | I) installcros ;;
+	2 | s | S) shimboot ;;
+	3 | i | I) installcros ;;
+	4 | R | R) rebootdevice ;;
+	5 | p | P) shutdowndevice ;;
 	6 | e | E) exitdebug ;;
 	*) echo "Invalid option" ;;
 	esac
