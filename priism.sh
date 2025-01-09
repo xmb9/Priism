@@ -127,15 +127,26 @@ shutdowndevice() {
 }
 
 exitdebug() {
-	if [[ releaseBuild -eq 0 ]]; then
+        if [[ releaseBuild -eq 0 ]]; then
+                umount /mnt/recoroot
+		umount /mnt/shimroot
+		umount /mnt/new_root
 		rm -rf /mnt/recoroot
-		rm -rf /mnt/priism
-		rm -rf /mnt/shimroot
-		rm -rf /mnt/new_root
-		exit
-	else
-		echo "Invalid option"
-	fi
+                rm -rf /mnt/priism
+                rm -rf /mnt/shimroot
+                rm -rf /mnt/new_root
+                exit
+        else
+                echo "Invalid option"
+        fi
+}
+
+sh1mmer() {
+        if [[ releaseBuild -eq 0 ]]; then
+		bash sh1mmer_main_old.sh || echo "Failed to run sh1mmer"
+        else
+                echo "Invalid option"
+        fi
 }
 
 while true; do
@@ -146,7 +157,8 @@ while true; do
 	echo "(4 or r) Reboot"
 	echo "(5 or p) Power off"
 	if [[ releaseBuild -eq 0 ]]; then
-		echo "(6 or e) Exit [Debug]"
+		echo "(6 or h) Run sh1mmer_main.sh [Debug]"
+		echo "(7 or e) Exit [Debug]"
 	fi
 	read -p "> " choice
 	case "$choice" in
@@ -155,7 +167,8 @@ while true; do
 	3 | i | I) installcros ;;
 	4 | R | R) rebootdevice ;;
 	5 | p | P) shutdowndevice ;;
-	6 | e | E) exitdebug ;;
+	6 | h | H) sh1mmer ;;
+	7 | e | E) exitdebug ;;
 	*) echo "Invalid option" ;;
 	esac
 	echo ""
