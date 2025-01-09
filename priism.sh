@@ -114,6 +114,7 @@ rebootdevice() {
 		reboot
 	else
 		echo "Use the bash shell to reboot."
+	fi
 }
 
 shutdowndevice() {
@@ -122,6 +123,7 @@ shutdowndevice() {
 		shutdown -h now
 	else
 		echo "Use the bash shell to shutdown."
+	fi
 }
 
 exitdebug() {
