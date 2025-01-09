@@ -8,7 +8,7 @@ SCRIPT_DIR=${SCRIPT_DIR:-"."}
 set -eE
 
 [ "$EUID" -ne 0 ] && fail "Please run as root"
-[ -z "$1" ] && echo "Specify a sh1mmer legacy image to modify with 'priism_builder.sh image.bin'"
+[ -z "$1" ] && echo "Specify a sh1mmer legacy image (Feb 2024+) to modify with 'priism_builder.sh image.bin'"
 
 cleanup() {
 	[ -d "$MNT_SH1MMER" ] && umount "$MNT_SH1MMER" && rmdir "$MNT_SH1MMER"
