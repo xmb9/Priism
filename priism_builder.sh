@@ -31,6 +31,7 @@ patch_sh1mmer() {
 	mount "${LOOPDEV}p1" "$MNT_SH1MMER"
 
 	log_info "Copying payload"
+	mv "$MNT_SH1MMER/root/noarch/usr/sbin/sh1mmer_main.sh" "$MNT_SH1MMER/root/noarch/usr/sbin/sh1mmer_main_old.sh"
 	cp priism.sh "$MNT_SH1MMER/root/noarch/usr/sbin/sh1mmer_main.sh"
 	cp priism_init.sh "$MNT_SH1MMER/bootstrap/noarch/init_sh1mmer.sh"
 	chmod -R +x "$MNT_SH1MMER"
