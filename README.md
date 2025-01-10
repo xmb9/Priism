@@ -2,9 +2,9 @@
 Portable recovery image installer/shim manager based on [SH1MMER Legacy](https://github.com/MercuryWorkshop/Sh1mmer)
 
 # What works? What doesn't?
-Recovery ✅
-Sh1mmer (Debug) ✅  
-Booting other shims ❌  
+Recovery ✅<br>
+Sh1mmer (Debug) ✅<br>
+Booting other shims ❌<br>
 
 # Downloads
 [2025-1-9]
