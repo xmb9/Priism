@@ -11,3 +11,5 @@ After flashing your image to a USB, expand the PRIISM_IMAGES partition to fill u
 Briefly describe any errors you recieve, then rerun the builder with ``sudo bash -x priism_builder.sh image.bin``. This will help me narrow down the issue.
 
 Further instructions will be added later.
+
+The reccommended distro for building is something arch based, preferably cachyos
