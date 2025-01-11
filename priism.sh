@@ -46,7 +46,7 @@ mkdir /mnt/shimroot
 mkdir /mnt/recoroot
 
 priism_images="$(cgpt find -l PRIISM_IMAGES | head -n 1 | grep --color=never /dev/)"
-# mount $priism_images /mnt/priism
+mount $priism_images /mnt/priism
 
 recochoose=(/mnt/priism/recovery/*)
 shimchoose=(/mnt/priism/shims/*)
