@@ -92,9 +92,9 @@ installcros() {
 	loop=$(losetup -fP --show $reco)
 	loop_root="$(cgpt find -l ${loop} ROOT-A | head -n 1 | grep --color=never /dev/)"
 	if mount -r "${loop_root}" $recoroot ; then
-		result=$?
 		echo "ROOT-A found successfully and mounted."
 	else
+ 		result=$?
 		echo "Mount process failed! Exit code was ${result}."
 		echo "This may be a bug! Please check your recovery image,"
 		echo "and if it looks fine, report it to the GitHub repo!"
