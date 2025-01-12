@@ -65,7 +65,7 @@ check_gpt_image "$IMAGE" || fail "$IMAGE is not GPT, or is corrupted"
 
 SH1MMER_PART_SIZE=$(parse_bytes "$FLAGS_sh1mmer_part_size") || fail "Could not parse size '$FLAGS_sh1mmer_part_size'"
 
-sudo dd if=/dev/zero bs=1MiB of=$IMAGE conv=notrunc oflag=append count=100
+sudo dd if=/dev/zero bs=1MiB of="$IMAGE" conv=notrunc oflag=append count=100
 # sane backup table
 suppress sgdisk -e "$IMAGE" 2>&1 | sed 's/\a//g'
 
