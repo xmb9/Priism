@@ -25,7 +25,7 @@ get_largest_cros_blockdev() {
 	size=0
 	for blockdev in /sys/block/*; do
 		dev_name="${blockdev##*/}"
-		echo "$dev_name" | grep -q '^\(loop\|ram\)' && continue
+		echo -e "$dev_name" | grep -q '^\(loop\|ram\)' && continue
 		tmp_size=$(cat "$blockdev"/size)
 		remo=$(cat "$blockdev"/removable)
 		if [ "$tmp_size" -gt "$size" ] && [ "${remo:-0}" -eq 0 ]; then
@@ -37,39 +37,39 @@ get_largest_cros_blockdev() {
 			esac
 		fi
 	done
-	echo "$largest"
+	echo -e "$largest"
 }
 
 funText() {
 	splashText=("       Triangle is love, triangle is life." "             Placeholder splash text")
   	selectedSplashText=${splashText[$RANDOM % ${#splashText[@]}]}
-	echo " "
-   	echo "$selectedSplashText"
+	echo -e " "
+   	echo -e "$selectedSplashText"
 }
 
 splash() {
-	echo "$COLOR_MAGENTA_B                                              ...."
-	echo "                        ..                  ......"
-	echo "                       .::.              ........."
-	echo "                      .:..:.          ......:::..."
-	echo "                     .::..::.      ..::::---:::..."
-	echo "  ........          ::::::::::  ..::-====--::.... "
-	echo "        ...:::::...::::::::..:::-=++=--:.....     "
-	echo "              ....----:::::::::-:.....            "
-	echo "                .:-:.........::::.                "
-	echo "               .............::::-:.               "
-	echo "               ............::::::-:.              "
-	echo "              .....::::::::::::::--:  $COLOR_RESET"
-	echo "                      Priism                      "
-	echo "                        or                        "
-	echo "  Portable recovery image installer/shim manager  "
-	echo "                      v1.0p                       "
+	echo -e "$COLOR_MAGENTA_B                                              ...."
+	echo -e "                        ..                  ......"
+	echo -e "                       .::.              ........."
+	echo -e "                      .:..:.          ......:::..."
+	echo -e "                     .::..::.      ..::::---:::..."
+	echo -e "  ........          ::::::::::  ..::-====--::.... "
+	echo -e "        ...:::::...::::::::..:::-=++=--:.....     "
+	echo -e "              ....----:::::::::-:.....            "
+	echo -e "                .:-:.........::::.                "
+	echo -e "               .............::::-:.               "
+	echo -e "               ............::::::-:.              "
+	echo -e "              .....::::::::::::::--:  $COLOR_RESET"
+	echo -e "                      Priism                      "
+	echo -e "                        or                        "
+	echo -e "  Portable recovery image installer/shim manager  "
+	echo -e "                      v1.0p                       "
 	funText
-	echo " "
+	echo -e " "
 }
 
 splash
-echo "${COLOR_YELLOW_B}THIS IS A PROTOTYPE BUILD, DO NOT EXPECT EVERYTHING TO WORK PROPERLY!!!${COLOR_RESET}"
+echo -e "${COLOR_YELLOW_B}THIS IS A PROTOTYPE BUILD, DO NOT EXPECT EVERYTHING TO WORK PROPERLY!!!${COLOR_RESET}"
 
 mkdir /mnt/priism
 mkdir /mnt/new_root
@@ -94,9 +94,9 @@ shimboot() {
 		
 		if [[ ! -f /mnt/priism/shims/$shimtoboot ]]
 		then
-			echo "File not found! Try again."
+			echo -e "File not found! Try again."
 		else
-			echo "Function not yet implemented."
+			echo -e "Function not yet implemented."
 		fi
 	done
 	read -p "Press enter to continue."
@@ -105,7 +105,7 @@ shimboot() {
 }
 
 installcros() {
-	echo "Choose the image you want to flash, or type exit:"
+	echo -e "Choose the image you want to flash, or type exit:"
 	select FILE in "${recochoose[@]}"; do
  		if [[ -n "$FILE" ]]; then
 			reco=$FILE
@@ -119,17 +119,17 @@ installcros() {
   
 	mkdir -p $recoroot
 
-	echo "Searching for ROOT-A on reco image..."
+	echo -e "Searching for ROOT-A on reco image..."
 	loop=$(losetup -fP --show $reco)
 	loop_root="$(cgpt find -l ROOT-A $loop)"
 	if mount -r "${loop_root}" $recoroot ; then
-		echo "ROOT-A found successfully and mounted."
+		echo -e "ROOT-A found successfully and mounted."
 	else
  		result=$?
-		echo "${COLOR_RED_B}Mount process failed! Exit code was ${result}."
-		echo "This may be a bug! Please check your recovery image,"
-		echo "and if it looks fine, report it to the GitHub repo!${COLOR_RESET}"
-		echo " "
+		echo -e "${COLOR_RED_B}Mount process failed! Exit code was ${result}."
+		echo -e "This may be a bug! Please check your recovery image,"
+		echo -e "and if it looks fine, report it to the GitHub repo!${COLOR_RESET}"
+		echo -e " "
   		read -p "Press enter to continue."
 		losetup -D
 		splash
@@ -141,31 +141,31 @@ installcros() {
 
 	local cros_dev="$(get_largest_cros_blockdev)"
 	if [ -z "$cros_dev" ]; then
-		echo "${COLOR_RED_B}No CrOS SSD found on device!${COLOR_RESET}"
+		echo -e "${COLOR_RED_B}No CrOS SSD found on device!${COLOR_RESET}"
 		read -p "Press enter to continue."
 		splash
 	fi
 
 	/mnt/recoroot/usr/sbin/chromeos-recovery $loop
 	
-	echo "chromeos-recovery returned exit code $?."
-	echo "Before rebooting, Priism needs to set priority to the newly installed kernel."
+	echo -e "chromeos-recovery returned exit code $?."
+	echo -e "Before rebooting, Priism needs to set priority to the newly installed kernel."
 	read -p "Press enter to continue."
 	cgpt add -i 2 $cros_dev -P 15 -T 15 -S 1 -R 1
 	read -p "${COLOR_GREEN}Recovery finished. Press any key to reboot."
 	reboot
-	echo "${COLOR_RED_B}Reboot failed. Hanging..."
+	echo -e "${COLOR_RED_B}Reboot failed. Hanging..."
 	while :; do sleep 1d; done
 }
 
 rebootdevice() {
 	if [[ releaseBuild -eq 1 ]]; then
-		echo "Rebooting..."
+		echo -e "Rebooting..."
 		reboot
-		echo "${COLOR_RED_B}Reboot failed. Hanging..."
+		echo -e "${COLOR_RED_B}Reboot failed. Hanging..."
 		while :; do sleep 1d; done
 	else
-		echo "Use the bash shell to reboot."
+		echo -e "Use the bash shell to reboot."
 	fi
 	read -p "Press enter to continue."
 	splash # This should never be reached on releaseBuilds
@@ -173,12 +173,12 @@ rebootdevice() {
 
 shutdowndevice() {
 	if [[ releaseBuild -eq 1 ]]; then
-		echo "Shutting down..."
+		echo -e "Shutting down..."
 		shutdown -h now
-		echo "${COLOR_RED_B}Shutdown failed. Hanging..."
+		echo -e "${COLOR_RED_B}Shutdown failed. Hanging..."
 		while :; do sleep 1d; done
 	else
-		echo "Use the bash shell to shutdown."
+		echo -e "Use the bash shell to shutdown."
 	fi
 	read -p "Press enter to continue."
 	splash
@@ -186,9 +186,9 @@ shutdowndevice() {
 
 exitdebug() {
         if [[ releaseBuild -eq 0 ]]; then
-		echo "${COLOR_YELLOW_B}Exit is only meant to be used when"
-		echo "testing Priism outside of shims!"
-		echo "Are you sure you want to do this?${COLOR_RESET}"
+		echo -e "${COLOR_YELLOW_B}Exit is only meant to be used when"
+		echo -e "testing Priism outside of shims!"
+		echo -e "Are you sure you want to do this?${COLOR_RESET}"
 		read -p "(y/n) >" exitask
 		if [[ $exitask == "y" ]]; then
                 	umount /mnt/recoroot > /dev/null
@@ -202,10 +202,10 @@ exitdebug() {
                 	rm -rf /mnt/new_root
                 	exit
 		else
-			echo "Cancelled."
+			echo -e "Cancelled."
 		fi
         else
-                echo "This option is only available on debug builds."
+                echo -e "This option is only available on debug builds."
         fi
 	read -p "Press enter to continue."
 	splash
@@ -213,24 +213,24 @@ exitdebug() {
 
 sh1mmer() {
         if [[ releaseBuild -eq 0 ]]; then
-		bash sh1mmer_main_old.sh || echo "${COLOR_RED_B}Failed to run sh1mmer!${COLOR_RESET}"
+		bash sh1mmer_main_old.sh || echo -e "${COLOR_RED_B}Failed to run sh1mmer!${COLOR_RESET}"
         else
-                echo "This option is only available on debug builds."
+                echo -e "This option is only available on debug builds."
         fi
 	read -p "Press enter to continue."
 	splash
 }
 
 while true; do
-	echo "Select an option:"
-	echo "(1 or b) Bash shell"
-	echo "(2 or s) Boot an RMA shim"
-	echo "(3 or i) Install a ChromeOS recovery image"
-	echo "(4 or r) Reboot"
-	echo "(5 or p) Power off"
+	echo -e "Select an option:"
+	echo -e "(1 or b) Bash shell"
+	echo -e "(2 or s) Boot an RMA shim"
+	echo -e "(3 or i) Install a ChromeOS recovery image"
+	echo -e "(4 or r) Reboot"
+	echo -e "(5 or p) Power off"
 	if [[ releaseBuild -eq 0 ]]; then
-		echo "(6 or h) Run sh1mmer_main.sh [Debug]"
-		echo "(7 or e) Exit [Debug]"
+		echo -e "(6 or h) Run sh1mmer_main.sh [Debug]"
+		echo -e "(7 or e) Exit [Debug]"
 	fi
 	read -p "> " choice
 	case "$choice" in
@@ -241,7 +241,7 @@ while true; do
 	5 | p | P) shutdowndevice ;;
 	6 | h | H) sh1mmer ;;
 	7 | e | E) exitdebug ;;
-	*) echo "Invalid option" ;;
+	*) echo -e "Invalid option" ;;
 	esac
-	echo ""
+	echo -e ""
 done
