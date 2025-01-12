@@ -121,7 +121,7 @@ installcros() {
 
 	echo "Searching for ROOT-A on reco image..."
 	loop=$(losetup -fP --show $reco)
-	loop_root="$(cgpt find -l ROOT-A $loop"
+	loop_root="$(cgpt find -l ROOT-A $loop)"
 	if mount -r "${loop_root}" $recoroot ; then
 		echo "ROOT-A found successfully and mounted."
 	else
