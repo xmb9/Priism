@@ -69,6 +69,12 @@ sudo dd if=/dev/zero bs=1MiB of=$IMAGE conv=notrunc oflag=append count=100
 # sane backup table
 suppress sgdisk -e "$IMAGE" 2>&1 | sed 's/\a//g'
 
+log_info "Correcting GPT errors"
+suppress fdisk "$IMAGE" <<EOF
+w
+EOF
+
+
 log_info "Creating loop device"
 LOOPDEV=$(losetup -f)
 losetup -P "$LOOPDEV" "$IMAGE"

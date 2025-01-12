@@ -274,8 +274,10 @@ cgpt_add_auto() {
 		sector_size=$(get_sector_size "$device")
 		# remember difference is negative
 		new_size=$((sector_size * (img_sectors - difference)))
+		echo $new_size
 		resize_image "$new_size" "$image" "$device"
 	fi
+	"$CGPT" repair "$device"
 	"$CGPT" add "$device" -i "$part" -b $((final_sector + 1)) -s "$sectors" "$@"
 	partx -u -n "$part" "$device"
 }
