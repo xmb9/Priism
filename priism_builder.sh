@@ -44,6 +44,7 @@ patch_sh1mmer() {
 	mkdir "$MNT_priism/shims"
 	mkdir "$MNT_priism/recovery"
 	mkdir "$MNT_priism/.IMAGES_NOT_YET_RESIZED"
+	safesync
 	umount $MNT_priism
 	rmdir $MNT_priism
 }
