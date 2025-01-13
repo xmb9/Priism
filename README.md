@@ -9,8 +9,10 @@ Booting other shims ❌<br>
 # Downloads
 [2025-1-9]
 
-[Octopus](https://files.odysen.space/priism_octopus-1hxOhwXHVsNM.bin)
+~~[Octopus](https://files.odysen.space/priism_octopus-1hxOhwXHVsNM.bin)~~
 
-[Dedede](https://files.odysen.space/priism_dedede-upIUaT0IgnBd.bin)
+~~[Dedede](https://files.odysen.space/priism_dedede-upIUaT0IgnBd.bin)~~
+
+These shims will not work.
 
 Refer to build instructions for how to use Priism.
