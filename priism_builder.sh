@@ -39,8 +39,6 @@ patch_sh1mmer() {
 	umount "$MNT_SH1MMER"
 	rmdir "$MNT_SH1MMER"
 
-	mkfs.ext4 -F -b 4096 -L PRIISM_IMAGES "${LOOPDEV}p5"
-
 	mount "${LOOPDEV}p5" "$MNT_priism"
 
 	mkdir "$MNT_priism/shims"
