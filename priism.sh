@@ -81,7 +81,7 @@ priism_disk="$(echo "$priism_images" | sed -E 's/(.*[0-9]+)$/\1/')"
 board_name="$(cat /sys/devices/virtual/dmi/id/board_name | head -n 1)"
 mount $priism_images /mnt/priism
 
-if [ -d "$priism_images/.IMAGES_NOT_YET_RESIZED" ]; then
+if [[ -d "$priism_images/.IMAGES_NOT_YET_RESIZED" ]]; then
 	echo -e "${COLOR_YELLOW}Priism needs to resize your images partition!${COLOR_RESET}"
 	read -p "Press enter to continue."
 	echo -e "${COLOR_GREEN}Info: Growing PRIISM_IMAGES partition"
@@ -121,7 +121,7 @@ shimboot() {
 }
 
 installcros() {
-	if [ -z "$(ls -A /mnt/priism/recovery)" ]; then
+	if [[ -z "$(ls -A /mnt/priism/recovery)" ]]; then
 		echo -e "${COLOR_YELLOW_B}You have no recovery images downloaded!\nPlease download a few images for your board (${board_name})\ninto the recovery folder on PRIISM_IMAGES!"
 		echo -e "These are available on websites such as chrome100.dev, or cros.tech."
 		echo -e "Chrome100 hosts old and new recovery images, whereas cros.tech only hosts the latest images."
