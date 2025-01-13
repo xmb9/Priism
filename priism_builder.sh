@@ -43,7 +43,7 @@ patch_sh1mmer() {
 
 	mkdir "$MNT_priism/shims"
 	mkdir "$MNT_priism/recovery"
-	touch "$MNT_priism/.IMAGES_NOT_YET_RESIZED"
+	mkdir "$MNT_priism/.IMAGES_NOT_YET_RESIZED"
 	umount $MNT_priism
 	rmdir $MNT_priism
 }
