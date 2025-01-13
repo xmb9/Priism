@@ -5,7 +5,8 @@
 
 # Using Priism
 
-After flashing your image to a USB, expand the PRIISM_IMAGES partition to fill up the rest of the drive. To add shims and recovery images, mount PRIISM_IMAGES and drop them in the ``shims`` and ``recovery`` folders respectively.
+After flashing your USB, boot it so that Priism can resize the images partition. For instructions on how to add recovery images, press ``i``.<br>
+If the drive is empty, it will show you where to get recovery images, and how to mount the images partition on your computer.
 
 # Bug reporting
 Briefly describe any errors you recieve, then rerun the builder with ``sudo bash -x priism_builder.sh image.bin``. This will help me narrow down the issue.
