@@ -81,7 +81,7 @@ priism_disk="$(echo "$priism_images" | sed -E 's/(.*[0-9]+)$/\1/')"
 board_name="$(cat /sys/devices/virtual/dmi/id/board_name | head -n 1)"
 mount $priism_images /mnt/priism
 
-if [ -d $priism_images/.IMAGES_NOT_YET_RESIZED" ]; then
+if [ -d "$priism_images/.IMAGES_NOT_YET_RESIZED" ]; then
 	echo -e "${COLOR_YELLOW}Priism needs to resize your images partition!${COLOR_RESET}"
 	read -p "Press enter to continue."
 	echo -e "${COLOR_GREEN}Info: Growing PRIISM_IMAGES partition"
