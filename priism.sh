@@ -121,7 +121,7 @@ shimboot() {
 }
 
 installcros() {
-	if [ "$(ls -A /mnt/priism/recovery)" ]; then
+	if [ -z "$(ls -A /mnt/priism/recovery)" ]; then
 		echo -e "${COLOR_YELLOW_B}You have no recovery images downloaded!\nPlease download a few images for your board (${board_name})\ninto the recovery folder on PRIISM_IMAGES!"
 		echo -e "These are available on websites such as chrome100.dev, or cros.tech."
 		echo -e "Chrome100 hosts old and new recovery images, whereas cros.tech only hosts the latest images."
