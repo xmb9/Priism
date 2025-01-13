@@ -20,7 +20,7 @@ patch_sh1mmer() {
 	log_info "Creating Priism images partition ($(format_bytes $SH1MMER_PART_SIZE))"
 	local sector_size=$(get_sector_size "$LOOPDEV")
 	cgpt_add_auto "$IMAGE" "$LOOPDEV" 5 $((SH1MMER_PART_SIZE / sector_size)) -t data -l PRIISM_IMAGES
-	mkfs.ext4 -F -b 4096 -L PRIISM_IMAGES "${LOOPDEV}p5"
+	mkfs.ext2 -F -b 4096 -L PRIISM_IMAGES "${LOOPDEV}p5"
 	
 	safesync
 	suppress sgdisk -e "$IMAGE" 2>&1 | sed 's/\a//g'
@@ -45,6 +45,7 @@ patch_sh1mmer() {
 
 	mkdir "$MNT_priism/shims"
 	mkdir "$MNT_priism/recovery"
+	touch "$MNT_priism/.IMAGES_NOT_YET_RESIZED"
 	umount $MNT_priism
 	rmdir $MNT_priism
 }

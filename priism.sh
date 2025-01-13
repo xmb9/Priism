@@ -77,10 +77,26 @@ mkdir /mnt/shimroot
 mkdir /mnt/recoroot
 
 priism_images="$(cgpt find -l PRIISM_IMAGES | head -n 1 | grep --color=never /dev/)"
+priism_disk="$(echo "$priism_images" | sed -E 's/(.*[0-9]+)$/\1/')"
+board_name="$(cat /sys/devices/virtual/dmi/id/board_name | head -n 1)"
 mount $priism_images /mnt/priism
+
+if [ -f "${priism_images}/.IMAGES_NOT_YET_RESIZED" ]; then
+	echo -e "${COLOR_YELLOW}Priism needs to resize your images partition!${COLOR_RESET}"
+	read -p "Press enter to continue."
+	echo -e "${COLOR_GREEN}Info: Growing PRIISM_IMAGES partition"
+	umount $priism_images
+	growpart $priism_disk 5
+	e2fsck -f $priism_images
+	resize2fs $priism_images
+	echo -e "${COLOR_GREEN}Done. Remounting partition..."
+	mount $priism_images /mnt/priism
+	rm $priism_images/.IMAGES_NOT_YET_RESIZED
+fi
 
 recochoose=(/mnt/priism/recovery/*)
 shimchoose=(/mnt/priism/shims/*)
+
 
 shimboot() {
 	find /mnt/priism/shims -type f
@@ -105,6 +121,14 @@ shimboot() {
 }
 
 installcros() {
+	if [ "$(ls -A /mnt/priism/recovery)" ]; then
+		echo -e "${COLOR_YELLOW_B}You have no recovery images downloaded!\nPlease download a few images for your board (${board_name})\ninto the recovery folder on PRIISM_IMAGES!"
+		echo -e "These are available on websites such as chrome100.dev, or cros.tech."
+		echo -e "Chrome100 hosts old and new recovery images, whereas cros.tech only hosts the latest images."
+		echo -e "If you have a computer running Windows, use Ext4Fsd or this chrome device.\nIf you have a Mac, use this chrome device to download images instead.${COLOR_RESET}\n"
+		read -p "Press enter to continue."
+		splash
+	fi
 	echo -e "Choose the image you want to flash, or type exit:"
 	select FILE in "${recochoose[@]}"; do
  		if [[ -n "$FILE" ]]; then
@@ -114,7 +138,8 @@ installcros() {
 	done
 		
 	if [[ $reco == "exit" ]]; then
-		break
+		read -p "Press enter to continue."
+		splash
 	fi
   
 	mkdir -p $recoroot
