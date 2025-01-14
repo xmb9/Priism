@@ -77,7 +77,7 @@ mkdir /mnt/shimroot
 mkdir /mnt/recoroot
 
 priism_images="$(cgpt find -l PRIISM_IMAGES | head -n 1 | grep --color=never /dev/)"
-priism_disk="$(echo "$priism_images" | sed -E 's/(mmcblk[0-9]+)p[0-9]+$/\1/; s/(sd[a-z])[0-9]+$/\1/')"
+priism_disk="$(echo "$priism_images" | sed -E 's/(mmcblk[0-9]+)p[0-9]+$/\1/; s/(sd[a-z])[0-9]+$/\1/')" # what the fuck?
 board_name="$(cat /sys/devices/virtual/dmi/id/board_name | head -n 1)"
 mount $priism_images /mnt/priism
 
