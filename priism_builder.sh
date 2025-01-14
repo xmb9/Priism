@@ -34,6 +34,7 @@ patch_sh1mmer() {
 	mv "$MNT_SH1MMER/root/noarch/usr/sbin/sh1mmer_main.sh" "$MNT_SH1MMER/root/noarch/usr/sbin/sh1mmer_main_old.sh"
 	cp priism.sh "$MNT_SH1MMER/root/noarch/usr/sbin/sh1mmer_main.sh"
 	cp priism_init.sh "$MNT_SH1MMER/bootstrap/noarch/init_sh1mmer.sh"
+	cp growpart.sh "$MNT_SH1MMER/root/noarch/usr/sbin/growpart"
 	chmod -R +x "$MNT_SH1MMER"
 
 	umount "$MNT_SH1MMER"
@@ -43,7 +44,7 @@ patch_sh1mmer() {
 
 	mkdir "$MNT_priism/shims"
 	mkdir "$MNT_priism/recovery"
-	mkdir "$MNT_priism/.IMAGES_NOT_YET_RESIZED"
+	touch "$MNT_priism/.IMAGES_NOT_YET_RESIZED"
 	safesync
 	umount $MNT_priism
 	rmdir $MNT_priism

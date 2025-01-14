@@ -77,21 +77,22 @@ mkdir /mnt/shimroot
 mkdir /mnt/recoroot
 
 priism_images="$(cgpt find -l PRIISM_IMAGES | head -n 1 | grep --color=never /dev/)"
-priism_disk="$(echo "$priism_images" | sed -E 's/(.*[0-9]+)$/\1/')"
+priism_disk="$(echo "$priism_images" | sed -E 's/(mmcblk[0-9]+)p[0-9]+$/\1/; s/(sd[a-z])[0-9]+$/\1/')"
 board_name="$(cat /sys/devices/virtual/dmi/id/board_name | head -n 1)"
 mount $priism_images /mnt/priism
 
-if [[ -d "$priism_images/.IMAGES_NOT_YET_RESIZED" ]]; then
+if [[ -f "/mnt/priism/.IMAGES_NOT_YET_RESIZED" ]]; then
 	echo -e "${COLOR_YELLOW}Priism needs to resize your images partition!${COLOR_RESET}"
 	read -p "Press enter to continue."
-	echo -e "${COLOR_GREEN}Info: Growing PRIISM_IMAGES partition"
+	echo -e "${COLOR_GREEN}Info: Growing PRIISM_IMAGES partition${COLOR_RESET}"
 	umount $priism_images
 	growpart $priism_disk 5
 	e2fsck -f $priism_images
 	resize2fs $priism_images
-	echo -e "${COLOR_GREEN}Done. Remounting partition..."
+	echo -e "${COLOR_GREEN}Done. Remounting partition...${COLOR_RESET}"
 	mount $priism_images /mnt/priism
-	rm $priism_images/.IMAGES_NOT_YET_RESIZED
+	rm -rf $priism_images/.IMAGES_NOT_YET_RESIZED
+	sync
 fi
 
 recochoose=(/mnt/priism/recovery/*)
@@ -118,6 +119,7 @@ shimboot() {
 	read -p "Press enter to continue."
 	losetup -D
 	splash
+	break
 }
 
 installcros() {
@@ -128,59 +130,63 @@ installcros() {
 		echo -e "If you have a computer running Windows, use Ext4Fsd or this chrome device.\nIf you have a Mac, use this chrome device to download images instead.${COLOR_RESET}\n"
 		read -p "Press enter to continue."
 		splash
+	else
+		echo -e "Choose the image you want to flash, or type exit:"
+		select FILE in "${recochoose[@]}"; do
+ 			if [[ -n "$FILE" ]]; then
+				reco=$FILE
+				break
+			fi
+		done
 	fi
-	echo -e "Choose the image you want to flash, or type exit:"
-	select FILE in "${recochoose[@]}"; do
- 		if [[ -n "$FILE" ]]; then
-			reco=$FILE
-			break
-		fi
-	done
 		
 	if [[ $reco == "exit" ]]; then
 		read -p "Press enter to continue."
 		splash
-	fi
-  
-	mkdir -p $recoroot
-
-	echo -e "Searching for ROOT-A on reco image..."
-	loop=$(losetup -fP --show $reco)
-	loop_root="$(cgpt find -l ROOT-A $loop)"
-	if mount -r "${loop_root}" $recoroot ; then
-		echo -e "ROOT-A found successfully and mounted."
 	else
- 		result=$?
-		echo -e "${COLOR_RED_B}Mount process failed! Exit code was ${result}."
-		echo -e "This may be a bug! Please check your recovery image,"
-		echo -e "and if it looks fine, report it to the GitHub repo!${COLOR_RESET}"
-		echo -e " "
-  		read -p "Press enter to continue."
-		losetup -D
-		splash
-	fi
+		mkdir -p $recoroot
 
-	mount -t proc /proc $recoroot/proc/
-	mount --rbind /sys $recoroot/sys/
-	mount --rbind /dev $recoroot/dev/
+		echo -e "Searching for ROOT-A on reco image..."
+		loop=$(losetup -fP --show $reco)
+		loop_root="$(cgpt find -l ROOT-A $loop)"
+		if mount -r "${loop_root}" $recoroot ; then
+			echo -e "ROOT-A found successfully and mounted."
+		else
+ 			result=$?
+			echo -e "${COLOR_RED_B}Mount process failed! Exit code was ${result}."
+			echo -e "This may be a bug! Please check your recovery image,"
+			echo -e "and if it looks fine, report it to the GitHub repo!${COLOR_RESET}"
+			echo -e " "
+  			read -p "Press enter to reboot."
+			reboot
+			echo -e "${COLOR_RED_B}Reboot failed. Hanging..."
+	                while :; do sleep 1d; done
+		fi
 
-	local cros_dev="$(get_largest_cros_blockdev)"
-	if [ -z "$cros_dev" ]; then
-		echo -e "${COLOR_RED_B}No CrOS SSD found on device!${COLOR_RESET}"
-		read -p "Press enter to continue."
-		splash
-	fi
-
-	/mnt/recoroot/usr/sbin/chromeos-recovery $loop
+		mount -t proc /proc $recoroot/proc/
+		mount --rbind /sys $recoroot/sys/
+		mount --rbind /dev $recoroot/dev/
 	
-	echo -e "chromeos-recovery returned exit code $?."
-	echo -e "Before rebooting, Priism needs to set priority to the newly installed kernel."
-	read -p "Press enter to continue."
-	cgpt add -i 2 $cros_dev -P 15 -T 15 -S 1 -R 1
-	read -p "${COLOR_GREEN}Recovery finished. Press any key to reboot."
-	reboot
-	echo -e "${COLOR_RED_B}Reboot failed. Hanging..."
-	while :; do sleep 1d; done
+		local cros_dev="$(get_largest_cros_blockdev)"
+		if [ -z "$cros_dev" ]; then
+			echo -e "${COLOR_RED_B}No CrOS SSD found on device!${COLOR_RESET}"
+			read -p "Press enter to reboot."
+			reboot
+        	        echo -e "${COLOR_RED_B}Reboot failed. Hanging..."
+	                while :; do sleep 1d; done
+		fi
+	
+		/mnt/recoroot/usr/sbin/chromeos-recovery $loop
+		
+		echo -e "chromeos-recovery returned exit code $?."
+		echo -e "Before rebooting, Priism needs to set priority to the newly installed kernel."
+		read -p "Press enter to continue."
+		cgpt add -i 2 $cros_dev -P 15 -T 15 -S 1 -R 1
+		read -p "${COLOR_GREEN}Recovery finished. Press any key to reboot."
+		reboot
+		echo -e "${COLOR_RED_B}Reboot failed. Hanging..."
+		while :; do sleep 1d; done
+	fi
 }
 
 rebootdevice() {
