@@ -104,6 +104,8 @@ if [ ! -z "$(ls -A /mnt/priism/.IMAGES_NOT_YET_RESIZED 2> /dev/null)" ]; then # 
 	sync
 fi
 
+chmod 777 /mnt/priism/*
+
 recochoose=(/mnt/priism/recovery/*)
 shimchoose=(/mnt/priism/shims/*)
 
