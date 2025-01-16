@@ -171,8 +171,6 @@ exec switch_root "$NEWROOT_MNT" /sbin/init -v --default-console output || :
 EOF
 chmod +x /bin/sh1mmer_switch_root
 
-[ "$(poll_key)" = "d" ] && notice_and_self_shell
-
 enable_input
 exec sh1mmer_switch_root || :
 

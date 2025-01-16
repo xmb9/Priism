@@ -2,7 +2,7 @@
 
 clear
 
-releaseBuild=0
+releaseBuild=1
 recoroot="/mnt/recoroot"
 
 COLOR_RESET="\033[0m"
@@ -41,7 +41,7 @@ get_largest_cros_blockdev() {
 }
 
 funText() {
-	splashText=("       Triangle is love, triangle is life." "             Placeholder splash text")
+	splashText=("       Triangle is love, triangle is life." "             Placeholder splash text" "    The lower tape fade meme is still massive")
   	selectedSplashText=${splashText[$RANDOM % ${#splashText[@]}]}
 	echo -e " "
    	echo -e "$selectedSplashText"
@@ -63,13 +63,13 @@ splash() {
 	echo -e "                      Priism                      "
 	echo -e "                        or                        "
 	echo -e "  Portable recovery image installer/shim manager  "
-	echo -e "                      v1.0p                       "
+	echo -e "                   v1.0 stable                    "
 	funText
 	echo -e " "
 }
 
 splash
-echo -e "${COLOR_YELLOW_B}THIS IS A PROTOTYPE BUILD, DO NOT EXPECT EVERYTHING TO WORK PROPERLY!!!${COLOR_RESET}"
+echo -e "${COLOR_YELLOW_B}Priism is currently in active development. Please report any issues you find.${COLOR_RESET}\n"
 
 mkdir /mnt/priism
 mkdir /mnt/new_root
@@ -81,17 +81,26 @@ priism_disk="$(echo "$priism_images" | sed -E 's/(mmcblk[0-9]+)p[0-9]+$/\1/; s/(
 board_name="$(cat /sys/devices/virtual/dmi/id/board_name | head -n 1)"
 mount $priism_images /mnt/priism
 
-if [[ -f "/mnt/priism/.IMAGES_NOT_YET_RESIZED" ]]; then
+if [ ! -z "$(ls -A /mnt/priism/.IMAGES_NOT_YET_RESIZED 2> /dev/null)" ]; then # this janky shit is the only way it works. idk why.
 	echo -e "${COLOR_YELLOW}Priism needs to resize your images partition!${COLOR_RESET}"
+	
 	read -p "Press enter to continue."
+	
 	echo -e "${COLOR_GREEN}Info: Growing PRIISM_IMAGES partition${COLOR_RESET}"
+	
 	umount $priism_images
-	growpart $priism_disk 5
+	
+	growpart $priism_disk 5 # growpart. why. why did you have to be different.
 	e2fsck -f $priism_images
+	
+	echo -e "${COLOR_GREEN}Info: Resizing filesystem (This operation may take a while, do not panic if it looks stuck!)${COLOR_RESET}"
+	
 	resize2fs $priism_images
+	
 	echo -e "${COLOR_GREEN}Done. Remounting partition...${COLOR_RESET}"
+	
 	mount $priism_images /mnt/priism
-	rm -rf $priism_images/.IMAGES_NOT_YET_RESIZED
+	rm -rf /mnt/priism/.IMAGES_NOT_YET_RESIZED
 	sync
 fi
 
@@ -100,36 +109,36 @@ shimchoose=(/mnt/priism/shims/*)
 
 
 shimboot() {
-	find /mnt/priism/shims -type f
-	while true; do
-		read -p "Please choose a shim to boot: " shimtoboot
-		
-		if [[ $shimtoboot == "exit" ]]
-		then
-			break
-		fi
-		
-		if [[ ! -f /mnt/priism/shims/$shimtoboot ]]
-		then
-			echo -e "File not found! Try again."
-		else
-			echo -e "Function not yet implemented."
-		fi
-	done
+	# find /mnt/priism/shims -type f
+	# while true; do
+		#read -p "Please choose a shim to boot: " shimtoboot
+		#
+		#if [[ $shimtoboot == "exit" ]]
+		#then
+		# 	break
+		#fi
+		#
+		#if [[ ! -f /mnt/priism/shims/$shimtoboot ]]
+		#then
+		#	echo -e "File not found! Try again."
+		#else
+		#	echo -e "Function not yet implemented."
+		#fi
+	#done
+	echo -e "${COLOR_RED_B}Function not yet implemented!${COLOR_RESET}\n"
 	read -p "Press enter to continue."
-	losetup -D
+	#losetup -D
+	clear
 	splash
-	break
 }
 
 installcros() {
 	if [[ -z "$(ls -A /mnt/priism/recovery)" ]]; then
-		echo -e "${COLOR_YELLOW_B}You have no recovery images downloaded!\nPlease download a few images for your board (${board_name})\ninto the recovery folder on PRIISM_IMAGES!"
+		echo -e "${COLOR_YELLOW_B}You have no recovery images downloaded!\nPlease download a few images for your board (${board_name}) into the recovery folder on PRIISM_IMAGES!"
 		echo -e "These are available on websites such as chrome100.dev, or cros.tech."
 		echo -e "Chrome100 hosts old and new recovery images, whereas cros.tech only hosts the latest images."
-		echo -e "If you have a computer running Windows, use Ext4Fsd or this chrome device.\nIf you have a Mac, use this chrome device to download images instead.${COLOR_RESET}\n"
-		read -p "Press enter to continue."
-		splash
+		echo -e "If you have a computer running Windows, use Ext4Fsd or this chrome device. If you have a Mac, use this chrome device to download images instead.${COLOR_RESET}\n"
+		reco="exit"
 	else
 		echo -e "Choose the image you want to flash, or type exit:"
 		select FILE in "${recochoose[@]}"; do
@@ -142,10 +151,10 @@ installcros() {
 		
 	if [[ $reco == "exit" ]]; then
 		read -p "Press enter to continue."
+		clear
 		splash
 	else
 		mkdir -p $recoroot
-
 		echo -e "Searching for ROOT-A on reco image..."
 		loop=$(losetup -fP --show $reco)
 		loop_root="$(cgpt find -l ROOT-A $loop)"
@@ -159,32 +168,32 @@ installcros() {
 			echo -e " "
   			read -p "Press enter to reboot."
 			reboot
+			sleep 1
 			echo -e "${COLOR_RED_B}Reboot failed. Hanging..."
 	                while :; do sleep 1d; done
 		fi
-
 		mount -t proc /proc $recoroot/proc/
 		mount --rbind /sys $recoroot/sys/
 		mount --rbind /dev $recoroot/dev/
-	
 		local cros_dev="$(get_largest_cros_blockdev)"
 		if [ -z "$cros_dev" ]; then
 			echo -e "${COLOR_RED_B}No CrOS SSD found on device!${COLOR_RESET}"
 			read -p "Press enter to reboot."
 			reboot
+			sleep 1
         	        echo -e "${COLOR_RED_B}Reboot failed. Hanging..."
 	                while :; do sleep 1d; done
 		fi
-	
 		/mnt/recoroot/usr/sbin/chromeos-recovery $loop
-		
-		echo -e "chromeos-recovery returned exit code $?."
-		echo -e "Before rebooting, Priism needs to set priority to the newly installed kernel."
+		echo -e "\nchromeos-recovery returned exit code $?." # manual newlines, because chromeos-recovery somehow manages to fuck up echo and stop it from doing it automatically. thanks google
+		echo -e "\n${COLOR_YELLOW}Before rebooting, Priism needs to set priority to the newly installed kernel.${COLOR_RESET}\n"
 		read -p "Press enter to continue."
 		cgpt add -i 2 $cros_dev -P 15 -T 15 -S 1 -R 1
-		read -p "${COLOR_GREEN}Recovery finished. Press any key to reboot."
+		echo -e "${COLOR_GREEN}\n"
+		read -p "Recovery finished. Press any key to reboot."
 		reboot
-		echo -e "${COLOR_RED_B}Reboot failed. Hanging..."
+		sleep 1
+		echo -e "\n${COLOR_RED_B}Reboot failed. Hanging..."
 		while :; do sleep 1d; done
 	fi
 }
@@ -193,12 +202,14 @@ rebootdevice() {
 	if [[ releaseBuild -eq 1 ]]; then
 		echo -e "Rebooting..."
 		reboot
+		sleep 1
 		echo -e "${COLOR_RED_B}Reboot failed. Hanging..."
 		while :; do sleep 1d; done
 	else
 		echo -e "Use the bash shell to reboot."
 	fi
 	read -p "Press enter to continue."
+	clear
 	splash # This should never be reached on releaseBuilds
 }
 
@@ -206,12 +217,14 @@ shutdowndevice() {
 	if [[ releaseBuild -eq 1 ]]; then
 		echo -e "Shutting down..."
 		shutdown -h now
+		sleep 1
 		echo -e "${COLOR_RED_B}Shutdown failed. Hanging..."
 		while :; do sleep 1d; done
 	else
 		echo -e "Use the bash shell to shutdown."
 	fi
 	read -p "Press enter to continue."
+	clear
 	splash
 }
 
@@ -243,11 +256,7 @@ exitdebug() {
 }
 
 sh1mmer() {
-        if [[ releaseBuild -eq 0 ]]; then
-		bash sh1mmer_main_old.sh || echo -e "${COLOR_RED_B}Failed to run sh1mmer!${COLOR_RESET}"
-        else
-                echo -e "This option is only available on debug builds."
-        fi
+	bash sh1mmer_main_old.sh || echo -e "${COLOR_RED_B}Failed to run sh1mmer!${COLOR_RESET}"
 	read -p "Press enter to continue."
 	splash
 }
@@ -255,12 +264,12 @@ sh1mmer() {
 while true; do
 	echo -e "Select an option:"
 	echo -e "(1 or b) Bash shell"
-	echo -e "(2 or s) Boot an RMA shim"
+	echo -e "(2 or s) Boot an RMA shim (Not implemented yet!)"
 	echo -e "(3 or i) Install a ChromeOS recovery image"
 	echo -e "(4 or r) Reboot"
 	echo -e "(5 or p) Power off"
+	echo -e "(6 or h) Run SH1MMER Legacy"
 	if [[ releaseBuild -eq 0 ]]; then
-		echo -e "(6 or h) Run sh1mmer_main.sh [Debug]"
 		echo -e "(7 or e) Exit [Debug]"
 	fi
 	read -p "> " choice
@@ -268,7 +277,7 @@ while true; do
 	1| b | B) bash ;;
 	2 | s | S) shimboot ;;
 	3 | i | I) installcros ;;
-	4 | R | R) rebootdevice ;;
+	4 | r | R) rebootdevice ;;
 	5 | p | P) shutdowndevice ;;
 	6 | h | H) sh1mmer ;;
 	7 | e | E) exitdebug ;;
