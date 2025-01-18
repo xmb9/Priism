@@ -95,7 +95,7 @@ if [ ! -z "$(ls -A /mnt/priism/.IMAGES_NOT_YET_RESIZED 2> /dev/null)" ]; then # 
 	
 	echo -e "${COLOR_GREEN}Info: Resizing filesystem (This operation may take a while, do not panic if it looks stuck!)${COLOR_RESET}"
 	
-	resize2fs $priism_images
+	resize2fs -p $priism_images
 	
 	echo -e "${COLOR_GREEN}Done. Remounting partition...${COLOR_RESET}"
 	
