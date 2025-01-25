@@ -283,7 +283,7 @@ while true; do
 	5 | p | P) shutdowndevice ;;
 	6 | h | H) sh1mmer ;;
 	7 | e | E) exitdebug ;;
-	*) echo -e "Invalid option" ;;
+	*) clear && echo -e "Invalid option $choice" ;;
 	esac
 	echo -e ""
 done
