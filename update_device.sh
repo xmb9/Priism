@@ -40,6 +40,8 @@ chmod +x "$CGPT"
 
 LOOP_PART=$("$CGPT" find -l SH1MMER /dev/loop* 2> /dev/null | grep "/dev/loop" --color=never | head -n 1) || fail "Failed to get SH1MMER partition on loop device"
 DEVICE_PART=$("$CGPT" find -l SH1MMER "$DEVICE" 2> /dev/null | grep "$DEVICE" --color=never | head -n 1) || fail "Failed to get SH1MMER partition on ${DEVICE}"
+IMAGES_PART_LOOP=$("$CGPT" find -l PRIISM_IMAGES /dev/loop* 2> /dev/null | grep "/dev/loop" --color=never | head -n 1) || fail "Failed to get PRIISM_IMAGES partition on ${DEVICE}"
+IMAGES_PART=$("$CGPT" find -l PRIISM_IMAGES "$DEVICE"* 2> /dev/null | grep "$DEVICE" --color=never | head -n 1) || fail "Failed to get PRIISM_IMAGES partition on ${DEVICE}"
 
 echo "SH1MMER partition on loop device is: ${LOOP_PART}"
 echo "SH1MMER partition on ${DEVICE} is: ${DEVICE_PART}"
@@ -53,4 +55,13 @@ echo -e "${COLOR_GREEN}Info: Beginning flash...${COLOR_RESET}"
 dd if="$LOOP_PART" of="$DEVICE_PART" status=progress || fail "An error occurred during flashing. Please report this, it could be bad!"
 sync
 losetup -D
+echo -e "${COLOR_GREEN}Info: Copying payloads to PRIISM_IMAGES...${COLOR_RESET}"
+MNT_IMAGES=$(mktemp -d)
+MNT_IMAGES_LOOP=$(mktemp -d)
+mount "$IMAGES_PART" "$MNT_IMAGES"
+mount "$IMAGES_PART_LOOP" "$MNT_IMAGES_LOOP"
+cp -r "$MNT_IMAGES_LOOP/payloads/*" "$MNT_IMAGES/payloads/" 
+sync
+umount "$MNT_IMAGES"
+umount "$MNT_IMAGES_LOOP"
 echo -e "${COLOR_GREEN}Done. Have fun!${COLOR_RESET}"
