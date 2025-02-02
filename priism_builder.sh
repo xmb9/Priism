@@ -45,7 +45,7 @@ patch_sh1mmer() {
 	mkdir "$MNT_priism/shims"
 	mkdir "$MNT_priism/recovery"
 	mkdir "$MNT_priism/payloads/"
-	cp "$SCRIPT_DIR/payloads/*" "$MNT_PRIISM/payloads/" -r
+	cp "$SCRIPT_DIR/payloads/"* "$MNT_priism/payloads/" -r
 	touch "$MNT_priism/.IMAGES_NOT_YET_RESIZED"
 	chmod 777 "$MNT_priism"/*
     safesync
