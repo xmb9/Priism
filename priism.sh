@@ -278,7 +278,7 @@ payloads() {
 			break
 		fi
 	done
-	if [[ $reco == "exit" ]]; then
+	if [[ $payload == "exit" ]]; then
 		read -p "Press enter to continue."
 		clear
 		splash
