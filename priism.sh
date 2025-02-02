@@ -310,7 +310,7 @@ while true; do
 	5 | r | R) rebootdevice ;;
 	6 | p | P) shutdowndevice ;;
 	7 | e | E) exitdebug ;;
-	*) clear && echo -e "Invalid option $choice" ;;
+	*) echo -e "Invalid option" ;;
 	esac
 	echo -e ""
 done
