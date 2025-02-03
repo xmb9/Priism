@@ -7,7 +7,10 @@ SH1MMER ✅<br>
 Booting other shims ❌<br>
 
 # Downloads
+~~[Offical Prebuilts](https://dl.archima.xyz/Priism)~~
 [Darkn's Prebuilts](https://dl.darkn.bio/Priism)
+
+Mirrors that are crossed out don't have Priism uploaded yet.
 
 # Credits
 - [Archimax](https://discord.com/users/988950574387068968) - Pioneering the creation of this tool

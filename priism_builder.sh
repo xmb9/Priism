@@ -16,6 +16,17 @@ cleanup() {
 	trap - EXIT INT
 }
 
+check_pre_frecon() {
+	log_info "Checking if shim is pre-frecon..."
+	MNT_root-a=$(mktemp -d)
+	mount "${LOOPDEV}p3" "$MNT_root-a"
+	if [ ! -z "$(ls -A "$MNT_root-a"/sbin/frecon 2> /dev/null)" ];
+		fail "Pre-frecon shims are not supported."
+	fi
+	log_info "Shim has frecon present. Continuing..."
+	umount "$MNT_root-a"
+}
+
 patch_sh1mmer() {
 	log_info "Creating Priism images partition ($(format_bytes $SH1MMER_PART_SIZE))"
 	local sector_size=$(get_sector_size "$LOOPDEV")
@@ -82,6 +93,9 @@ EOF
 log_info "Creating loop device"
 LOOPDEV=$(losetup -f)
 losetup -P "$LOOPDEV" "$IMAGE"
+safesync
+
+check_pre_frecon
 safesync
 
 patch_sh1mmer
