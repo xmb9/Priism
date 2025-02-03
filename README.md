@@ -18,3 +18,4 @@ Mirrors that are crossed out don't have Priism uploaded yet.
 - [OlyB](https://discord.com/users/476169716998733834) - Help with adapting wax to Priism and PID1
 - [kxtzownsu](https://discord.com/users/952792525637312552) - Help with `sed` syntax
 - [simpansoftware](https://discord.com/users/1001820177731686500) - Testing Priism and building the very first shims
+- [Darkn](https://darkn.bio) - Hosting shims :fire:
