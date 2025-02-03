@@ -19,7 +19,7 @@ cleanup() {
 check_pre_frecon() {
 	log_info "Checking if shim is pre-frecon..."
 	MNT_root-a=$(mktemp -d)
-	mount "${LOOPDEV}p3" "$MNT_root-a"
+	mount "${LOOPDEV}p4" "$MNT_root-a"
 	if [ ! -z "$(ls -A "$MNT_root-a"/sbin/frecon 2> /dev/null)" ];
 		fail "Pre-frecon shims are not supported."
 	fi
