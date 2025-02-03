@@ -2,9 +2,9 @@
 Portable recovery image installer/shim manager based on [SH1MMER Legacy](https://github.com/MercuryWorkshop/Sh1mmer)
 
 # What works? What doesn't?
-Recovery ✅<br>
-SH1MMER ✅<br>
-Booting other shims ❌<br>
+Recovery :white_check_mark:<br>
+Payloads menu :grey_question:<br>
+Booting other shims :x:<br>
 
 # Downloads
 ~~[Offical Prebuilts](https://dl.archima.xyz/Priism)~~<br>
