@@ -45,6 +45,8 @@ IMAGES_PART=$("$CGPT" find -l PRIISM_IMAGES "$DEVICE"* 2> /dev/null | grep "$DEV
 
 echo "SH1MMER partition on loop device is: ${LOOP_PART}"
 echo "SH1MMER partition on ${DEVICE} is: ${DEVICE_PART}"
+echo "PRIISM_IMAGES partition on loop device is: ${IMAGES_PART_LOOP}"
+echo "PRIISM_IMAGES partition on ${DEVICE} is: ${IMAGES_PART}"
 
 echo -e "${COLOR_YELLOW_B}About to flash SH1MMER partition on ${DEVICE}! Data loss could possibly occur!${COLOR_RESET}"
 echo -e "Please make sure the above partition values look correct!"
@@ -54,14 +56,19 @@ sleep 5
 echo -e "${COLOR_GREEN}Info: Beginning flash...${COLOR_RESET}"
 dd if="$LOOP_PART" of="$DEVICE_PART" status=progress || fail "An error occurred during flashing. Please report this, it could be bad!"
 sync
-losetup -D
 echo -e "${COLOR_GREEN}Info: Copying payloads to PRIISM_IMAGES...${COLOR_RESET}"
 MNT_IMAGES=$(mktemp -d)
 MNT_IMAGES_LOOP=$(mktemp -d)
 mount "$IMAGES_PART" "$MNT_IMAGES"
 mount "$IMAGES_PART_LOOP" "$MNT_IMAGES_LOOP"
-cp -r "$MNT_IMAGES_LOOP/payloads/*" "$MNT_IMAGES/payloads/" 
+mkdir "$MNT_IMAGES/payloads/"
+cp -vR "$MNT_IMAGES_LOOP"/payloads/* "$MNT_IMAGES"/payloads/
 sync
+sync
+sync
+sleep 0.2
 umount "$MNT_IMAGES"
 umount "$MNT_IMAGES_LOOP"
+umount /tmp/tmp.* 2&> /dev/null # Failsafe umount. I fucking hate loopback devices.
+losetup --detach-all
 echo -e "${COLOR_GREEN}Done. Have fun!${COLOR_RESET}"
