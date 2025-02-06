@@ -27,6 +27,8 @@ fail() {
 }
 
 hang() {
+	tput civis
+	stty -echo
 	while :; do sleep 1d; done
 }
 
@@ -73,9 +75,24 @@ splash() {
 	echo -e "                      Priism                      "
 	echo -e "                        or                        "
 	echo -e "  Portable recovery image installer/shim manager  "
-	echo -e "              v1.1 release candidate              "
+	echo -e "                   v1.1 stable                    "
 	funText
 	echo -e " "
+}
+
+credits() {
+	echo -e "${COLOR_MAGENTA_B}Priism credits"
+	echo -e "${COLOR_BLUE_B}Ethereal Workshop${COLOR_RESET}: Developers behind Priism"
+	echo -e "${COLOR_BLUE_B}Archimax${COLOR_RESET}: Pioneering the creation of this tool"
+	echo -e "${COLOR_MAGENTA_B}Mercury Workshop${COLOR_RESET}: Finding the SH1MMER exploit"
+	echo -e "${COLOR_MAGENTA_B}OlyB${COLOR_RESET}: Help with adapting wax to Priism and PID1"
+	echo -e "${COLOR_MAGENTA_B}kxtzownsu${COLOR_RESET}: Help with sed syntax"
+	echo -e "${COLOR_RED_B}simpamsoftware${COLOR_RESET}: Testing Priism and building the very first shims"
+	echo -e "${COLOR_YELLOW_B}Darkn${COLOR_RESET}: Hosting shims"
+	echo -e " "
+	read -p "Press enter to continue."
+	clear
+	splash
 }
 
 splash
@@ -118,6 +135,7 @@ chmod 777 /mnt/priism/*
 
 recochoose=(/mnt/priism/recovery/*)
 shimchoose=(/mnt/priism/shims/*)
+selpayload=(/mnt/priism/payloads/*.sh)
 
 shimboot() {
 	# find /mnt/priism/shims -type f
@@ -151,18 +169,19 @@ installcros() {
 		echo -e "If you have a computer running Windows, use Ext4Fsd or this chrome device. If you have a Mac, use this chrome device to download images instead.${COLOR_RESET}\n"
 		reco="exit"
 	else
-		echo -e "Choose the image you want to flash, or type exit:"
-		select FILE in "${recochoose[@]}"; do
+		echo -e "Choose the image you want to flash:"
+		select FILE in "${recochoose[@]}" "Exit"; do
  			if [[ -n "$FILE" ]]; then
 				reco=$FILE
 				break
-			elif [[ reco == "exit" ]]
+			elif [[ $FILE == "Exit" ]]; then
+				reco=$FILE
 				break
 			fi
 		done
 	fi
 		
-	if [[ $reco == "exit" ]]; then
+	if [[ $reco == "Exit" ]]; then
 		read -p "Press enter to continue."
 		clear
 		splash
@@ -175,32 +194,25 @@ installcros() {
 			echo -e "ROOT-A found successfully and mounted."
 		else
  			result=$?
-			echo -e "${COLOR_RED_B}Mount process failed! Exit code was ${result}."
-			echo -e "This may be a bug! Please check your recovery image,"
-			echo -e "and if it looks fine, report it to the GitHub repo!${COLOR_RESET}"
-			echo -e " "
-  			read -p "Press enter to reboot."
-			reboot
-			sleep 1
-			echo -e "${COLOR_RED_B}Reboot failed. Hanging..."
-	        hang
+			err1="Mount process failed! Exit code was ${result}.\n"
+			err2="              This may be a bug! Please check your recovery image,\n"
+			err3="              and if it looks fine, report it to the GitHub repo!\n"
+			fail "${err1}${err2}${err3}"
 		fi
 		local cros_dev="$(get_largest_cros_blockdev)"
 		if [ -z "$cros_dev" ]; then
 			fail "No CrOS drive found on device! Please make sure ChromeOS is installed before using Priism."
 		fi
-		stateful="$(cgpt find -l STATE* ${cros_dev} | head -n 1 | grep --color=never /dev/)" || fail "Failed to find stateful partition on ${cros_dev}!"
+		stateful="$(cgpt find -l STATE ${loop} | head -n 1 | grep --color=never /dev/)" || fail "Failed to find stateful partition on ${loop}!"
 		mount $stateful /mnt/stateful_partition || fail "Failed to mount stateful partition!"
 		MOUNTS="/proc /dev /sys /tmp /run /var /mnt/stateful_partition" 
 		cd /mnt/recoroot/
 		d=
-    	for d in ${MOUNTS}; do
-      		mount -n --bind "${d}" "./${d}"
-      		mount --make-slave "./${d}"
-    	done
-		chroot ./ /usr/sbin/chromeos-install --payload_image "${loop}" --dst "${cros_dev}" --yes || fail "Failed to chroot to new root!"
-		echo -e "\n${COLOR_YELLOW}Before rebooting, Priism needs to set priority to the newly installed kernel.${COLOR_RESET}\n"
-		read -p "Press enter to continue."
+		for d in ${MOUNTS}; do
+	  		mount -n --bind "${d}" "./${d}"
+	  		mount --make-slave "./${d}"
+		done
+		chroot ./ /usr/sbin/chromeos-install --payload_image "${loop}" --dst "${cros_dev}" --yes || fail "Failed during chroot!"
 		cgpt add -i 2 $cros_dev -P 15 -T 15 -S 1 -R 1 || fail "Failed to set kernel priority!"
 		echo -e "${COLOR_GREEN}\n"
 		read -p "Recovery finished. Press any key to reboot."
@@ -242,43 +254,44 @@ shutdowndevice() {
 }
 
 exitdebug() {
-    if [[ releaseBuild -eq 0 ]]; then
+	if [[ releaseBuild -eq 0 ]]; then
 		echo -e "${COLOR_YELLOW_B}Exit is only meant to be used when"
 		echo -e "testing Priism outside of shims!"
 		echo -e "Are you sure you want to do this?${COLOR_RESET}"
 		read -p "(y/n) >" exitask
 		if [[ $exitask == "y" ]]; then
-            umount /mnt/recoroot > /dev/null
+			umount /mnt/recoroot > /dev/null
 			umount /mnt/shimroot > /dev/null
 			umount /mnt/new_root > /dev/null
 			umount /mnt/priism > /dev/null
 			losetup -D > /dev/null
 			rm -rf /mnt/recoroot
-            rm -rf /mnt/priism
-            rm -rf /mnt/shimroot
-            rm -rf /mnt/new_root
-            exit
+			rm -rf /mnt/priism
+			rm -rf /mnt/shimroot
+			rm -rf /mnt/new_root
+			exit
 		else
 			echo -e "Cancelled."
 		fi
-    else
-        echo -e "This option is only available on debug builds."
-    fi
+	else
+		echo -e "This option is only available on debug builds."
+	fi
 	read -p "Press enter to continue."
 	splash
 }
 
 payloads() {
 	echo -e "Choose payload to run:"
-	select FILE in "${selpayload[@]}"; do
+	select FILE in "${selpayload[@]}" "Exit"; do
  		if [[ -n "$FILE" ]]; then
 			payload=$FILE
 			break
-		elif [[ payload == "exit" ]]
+		elif [[ "$FILE" == "Exit" ]]; then
+			payload=$FILE
 			break
 		fi
 	done
-	if [[ $payload == "exit" ]]; then
+	if [[ $payload == "Exit" ]]; then
 		read -p "Press enter to continue."
 		clear
 		splash
@@ -296,10 +309,11 @@ while true; do
 	echo -e "(2 or s) Boot an RMA shim (Not implemented yet!)"
 	echo -e "(3 or i) Install a ChromeOS recovery image"
 	echo -e "(4 or a) Payloads"
-	echo -e "(5 or r) Reboot"
-	echo -e "(6 or p) Power off"
+	echo -e "(5 or c) Credits"
+	echo -e "(6 or r) Reboot"
+	echo -e "(7 or p) Power off"
 	if [[ releaseBuild -eq 0 ]]; then
-		echo -e "(7 or e) Exit [Debug]"
+		echo -e "(8 or e) Exit [Debug]"
 	fi
 	read -p "> " choice
 	case "$choice" in
@@ -307,9 +321,10 @@ while true; do
 	2 | s | S) shimboot ;;
 	3 | i | I) installcros ;;
 	4 | a | A) payloads ;;
-	5 | r | R) rebootdevice ;;
-	6 | p | P) shutdowndevice ;;
-	7 | e | E) exitdebug ;;
+	5 | c | C) credits ;;
+	6 | r | R) rebootdevice ;;
+	7 | p | P) shutdowndevice ;;
+	8 | e | E) exitdebug ;;
 	*) clear && echo -e "Invalid option $choice" ;;
 	esac
 	echo -e ""
