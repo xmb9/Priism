@@ -5,15 +5,24 @@ SCRIPT_DIR=$(dirname "$0")
 SCRIPT_DIR=${SCRIPT_DIR:-"."}
 . "$SCRIPT_DIR/wax_common.sh"
 
-set -eE
-
 [ "$EUID" -ne 0 ] && fail "Please run as root"
-[ -z "$1" ] && echo "Specify a sh1mmer legacy image (Feb 2024+) to modify with 'priism_builder.sh image.bin'"
+[ -z "$1" ] && fail "Specify a SH1MMER Legacy image (Feb 2024+) to modify with 'priism_builder.sh image.bin'"
 
 cleanup() {
 	[ -d "$MNT_SH1MMER" ] && umount "$MNT_SH1MMER" && rmdir "$MNT_SH1MMER"
 	[ -z "$LOOPDEV" ] || losetup -d "$LOOPDEV" || :	
 	trap - EXIT INT
+}
+
+check_raw_shim() {
+	log_info "Checking if this is a raw shim..."
+	CGPT="${SCRIPT_DIR}/lib/$ARCHITECTURE/cgpt"
+        chmod +x "$CGPT"
+	sh1mmer_exists=$("$CGPT" find -l SH1MMER "$LOOPDEV" 2&> /dev/null)
+	if [ $? != 0 ]; then
+		fail "Use a SH1MMER Legacy image, not a raw shim!"
+	fi
+	log_info "SH1MMER Legacy image detected, continuing..."
 }
 
 check_pre_frecon() {
@@ -64,9 +73,6 @@ patch_sh1mmer() {
 	rmdir $MNT_priism
 }
 
-trap 'echo $BASH_COMMAND failed with exit code $?. THIS IS A BUG, PLEASE REPORT!' ERR
-trap 'cleanup; exit' EXIT
-trap 'echo Abort.; cleanup; exit' INT
 FLAGS_sh1mmer_part_size=64M
 		
 if [ -b "$IMAGE" ]; then
@@ -94,6 +100,14 @@ log_info "Creating loop device"
 LOOPDEV=$(losetup -f)
 losetup -P "$LOOPDEV" "$IMAGE"
 safesync
+
+check_raw_shim
+safesync
+
+trap 'echo $BASH_COMMAND failed with exit code $?. THIS IS A BUG, PLEASE REPORT!' ERR
+trap 'cleanup; exit' EXIT
+trap 'echo Abort.; cleanup; exit' INT
+set -eE
 
 check_pre_frecon
 safesync
