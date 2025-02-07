@@ -13,7 +13,7 @@ ARCHITECTURE="${4:-x86_64}"
 
 ROOTFS_DEV=
 
-SCRIPT_DATE="[2025-2-2]"
+SCRIPT_DATE="[2025-2-7]"
 
 COLOR_RESET="\033[0m"
 COLOR_BLACK_B="\033[1;30m"
@@ -116,8 +116,8 @@ echo "               ............::::::-:.              "
 echo "              .....::::::::::::::--:              "
 printf "${COLOR_RESET}"
 echo "Priism is loading..."
-echo "Built on: ${SCRIPT_DATE}"
-echo "https://github.com/EnterTheVoid-x86/Priism"
+echo "Bootloader version: ${SCRIPT_DATE}"
+echo "https://github.com/Ethereal-Workshop/Priism"
 echo ""
 
 echo "Copying rootfs..."
