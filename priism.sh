@@ -103,9 +103,9 @@ mkdir /mnt/new_root
 mkdir /mnt/shimroot
 mkdir /mnt/recoroot
 
-priism_images="$(cgpt find -l PRIISM_IMAGES | head -n 1 | grep --color=never /dev/)" || fail "Failed to find PRIISM_IMAGES partition!"
-priism_disk="$(echo "$priism_images" | sed -E 's/(mmcblk[0-9]+)p[0-9]+$/\1/; s/(sd[a-z])[0-9]+$/\1/')" || fail "Failed to find Priism disk!" # what the fuck?
-board_name="$(cat /sys/devices/virtual/dmi/id/board_name | head -n 1)" || fail "Could not get board name!"
+priism_images="$(cgpt find -l PRIISM_IMAGES || fail 'Failed to find PRIISM_IMAGES partition!' | head -n 1 | grep --color=never /dev/)"
+priism_disk="$(echo "$priism_images" | sed -E 's/(mmcblk[0-9]+)p[0-9]+$/\1/; s/(sd[a-z])[0-9]+$/\1/') || fail 'Failed to find Priism disk!'"  # what the fuck?
+board_name="$(cat /sys/devices/virtual/dmi/id/board_name || fail "Could not get board name!" | head -n 1)"
 mount $priism_images /mnt/priism || fail "Failed to mount PRIISM_IMAGES partition!"
 
 if [ ! -z "$(ls -A /mnt/priism/.IMAGES_NOT_YET_RESIZED 2> /dev/null)" ]; then # this janky shit is the only way it works. idk why.
@@ -118,7 +118,7 @@ if [ ! -z "$(ls -A /mnt/priism/.IMAGES_NOT_YET_RESIZED 2> /dev/null)" ]; then # 
 	umount $priism_images
 	
 	growpart $priism_disk 5 || fail "Failed to grow partition 5 on ${priism_disk}!" # growpart. why. why did you have to be different.
-	e2fsck -f $priism_images || fail "Failed to repair partition 5 on ${priism_disk}!"
+	e2fsck -f $priism_images
 	
 	echo -e "${COLOR_GREEN}Info: Resizing filesystem (This operation may take a while, do not panic if it looks stuck!)${COLOR_RESET}"
 	
