@@ -13,7 +13,7 @@ Booting other shims :x:<br>
 Mirrors that are crossed out don't have Priism uploaded yet.
 
 # Credits
-- [Archimax](https://discord.com/users/988950574387068968) - Pioneering the creation of this tool
+- [xmb9](https://discord.com/users/988950574387068968) - Pioneering the creation of this tool
 - [Mercury Workshop](https://mercurywork.shop) - Developing SH1MMER
 - [OlyB](https://discord.com/users/476169716998733834) - Help with adapting wax to Priism and PID1
 - [kxtzownsu](https://discord.com/users/952792525637312552) - Help with `sed` syntax
