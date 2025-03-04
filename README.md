@@ -7,8 +7,10 @@ Payloads menu :grey_question:<br>
 Booting other shims :x:<br>
 
 # Downloads
-~~[Offical Prebuilts](https://dl.archima.xyz/Priism)~~<br>
-[Darkn's Prebuilts](https://dl.darkn.bio/Priism)
+~~[Official Prebuilts](https://dl.archima.xyz/Priism)~~<br>
+~~[Darkn's Prebuilts](https://dl.darkn.bio/Priism)~~
+> [!NOTE]
+> Darkn's File Host has gone [down.](https://darkn.bio/notice)
 
 Mirrors that are crossed out don't have Priism uploaded yet.
 
