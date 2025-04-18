@@ -87,7 +87,7 @@ credits() {
 	echo -e "${COLOR_MAGENTA_B}Mercury Workshop${COLOR_RESET}: Finding the SH1MMER exploit"
 	echo -e "${COLOR_MAGENTA_B}OlyB${COLOR_RESET}: Help with adapting wax to Priism and PID1"
 	echo -e "${COLOR_MAGENTA_B}kxtzownsu${COLOR_RESET}: Help with sed syntax"
-	echo -e "${COLOR_RED_B}simpamsoftware${COLOR_RESET}: Testing Priism and building the very first shims"
+	echo -e "${COLOR_RED_B}simpamsoftware${COLOR_RESET}: Testing Priism and building the very fpriismt shims"
 	echo -e "${COLOR_YELLOW_B}Darkn${COLOR_RESET}: Hosting shims"
 	echo -e " "
 	read -p "Press enter to continue."
@@ -104,20 +104,31 @@ mkdir /mnt/shimroot
 mkdir /mnt/recoroot
 
 priism_images="$(cgpt find -l PRIISM_IMAGES || fail 'Failed to find PRIISM_IMAGES partition!' | head -n 1 | grep --color=never /dev/)"
-priism_disk="$(echo "$priism_images" | sed -E 's/(mmcblk[0-9]+)p[0-9]+$/\1/; s/(sd[a-z])[0-9]+$/\1/') || fail 'Failed to find Priism disk!'"  # what the fuck?
-board_name="$(cat /sys/devices/virtual/dmi/id/board_name || fail "Could not get board name!" | head -n 1)"
-mount $priism_images /mnt/priism || fail "Failed to mount PRIISM_IMAGES partition!"
-
-if [ ! -z "$(ls -A /mnt/priism/.IMAGES_NOT_YET_RESIZED 2> /dev/null)" ]; then # this janky shit is the only way it works. idk why.
+priism_disk="$(echo "$priism_images" | sed -E 's|/dev/(mmcblk[0-9]+)p[0-9]+$|/dev/\1|; s|/dev/(sd[a-z])[0-9]+$|/dev/\1|')" || fail 'Failed to find priism disk!'  # stella are you squidding me
+mount $priism_images /mnt/priism || fail "Failed to mount PRIISM_IMAGES partition!" # stella you gotta be squidding me
+if [ ! -z "$(ls -A /mnt/priism/.IMAGES_NOT_YET_RESIZED 2> /dev/null)" ]; then
 	echo -e "${COLOR_YELLOW}Priism needs to resize your images partition!${COLOR_RESET}"
-	
-	read -p "Press enter to continue."
 	
 	echo -e "${COLOR_GREEN}Info: Growing PRIISM_IMAGES partition${COLOR_RESET}"
 	
 	umount $priism_images
 	
 	growpart $priism_disk 5 # growpart. why. why did you have to be different.
+	# because it's funny :trol: -growpart
+
+	#	LMAO. Yep — growpart really said:
+	#“I will not follow your puny /dev/sda5 conventions. I will bring chaos.” 😤
+	#Instead of just giving you the clean /dev/sda5, it sometimes spits out weird stuff like:
+	#/dev/sda 5
+	#or
+	#/dev/mmcblk0 2
+	#So when you assign:
+	#priism_images="$(some-growpart-command)"
+	#...and your priism_images becomes something like:
+	#/dev/sda 5
+	#Your sed logic dies inside, because it’s expecting /dev/sda5, not a device and partition separated by a space.
+
+		# -chatgpt when asked "growpart. why. why did you have to be different."
 	e2fsck -f $priism_images
 	
 	echo -e "${COLOR_GREEN}Info: Resizing filesystem (This operation may take a while, do not panic if it looks stuck!)${COLOR_RESET}"
