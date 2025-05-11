@@ -22,7 +22,7 @@ fi
 
 fail() {
 	printf "Priism panic: ${COLOR_RED_B}%b${COLOR_RESET}\n" "$*" >&2 || :
-	printf "panic: We are hanging here..." 
+	printf "panic: We are hanging here..."
 	hang
 }
 
@@ -104,8 +104,11 @@ mkdir /mnt/shimroot
 mkdir /mnt/recoroot
 
 priism_images="$(cgpt find -l PRIISM_IMAGES || fail 'Failed to find PRIISM_IMAGES partition!' | head -n 1 | grep --color=never /dev/)"
-priism_disk="$(echo "$priism_images" | sed -E 's/(mmcblk[0-9]+)p[0-9]+$/\1/; s/(sd[a-z])[0-9]+$/\1/') || fail 'Failed to find Priism disk!'"  # what the fuck?
+priism_disk="$(echo "$priism_images" | sed -E 's|/dev/(mmcblk[0-9]+)p[0-9]+$|/dev/\1|; s|/dev/(sd[a-z])[0-9]+$|/dev/\1|')" || fail 'Failed to find Priism disk!' # what the fuck? (thank you sophie)
+
 board_name="$(cat /sys/devices/virtual/dmi/id/board_name || fail "Could not get board name!" | head -n 1)"
+source /etc/lsb-release
+
 mount $priism_images /mnt/priism || fail "Failed to mount PRIISM_IMAGES partition!"
 
 if [ ! -z "$(ls -A /mnt/priism/.IMAGES_NOT_YET_RESIZED 2> /dev/null)" ]; then # this janky shit is the only way it works. idk why.
@@ -163,11 +166,11 @@ shimboot() {
 
 installcros() {
 	if [[ -z "$(ls -A /mnt/priism/recovery)" ]]; then
-		echo -e "${COLOR_YELLOW_B}You have no recovery images downloaded!\nPlease download a few images for your board (${board_name}) into the recovery folder on PRIISM_IMAGES!"
+		echo -e "${COLOR_YELLOW_B}You have no recovery images downloaded!\nPlease download a few images for your board ${board_name} (${CHROMEOS_RELEASE_BOARD}) into the recovery folder on PRIISM_IMAGES!"
 		echo -e "These are available on websites such as chrome100.dev, or cros.tech."
 		echo -e "Chrome100 hosts old and new recovery images, whereas cros.tech only hosts the latest images."
 		echo -e "If you have a computer running Windows, use Ext4Fsd or this chrome device. If you have a Mac, use this chrome device to download images instead.${COLOR_RESET}\n"
-		reco="exit"
+		reco="Exit"
 	else
 		echo -e "Choose the image you want to flash:"
 		select FILE in "${recochoose[@]}" "Exit"; do
