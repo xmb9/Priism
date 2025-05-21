@@ -75,19 +75,20 @@ splash() {
 	echo -e "                      Priism                      "
 	echo -e "                        or                        "
 	echo -e "  Portable recovery image installer/shim manager  "
-	echo -e "                   v1.1 stable                    "
+	echo -e "                     v1.2 dev                    "
 	funText
 	echo -e " "
 }
 
+# version strings: use dev, stable, or release candidate
+
 credits() {
 	echo -e "${COLOR_MAGENTA_B}Priism credits"
-	echo -e "${COLOR_BLUE_B}Ethereal Workshop${COLOR_RESET}: Developers behind Priism"
-	echo -e "${COLOR_BLUE_B}Archimax${COLOR_RESET}: Pioneering the creation of this tool"
+	echo -e "${COLOR_BLUE_B}xmb9${COLOR_RESET}: Pioneering the creation of this tool"
 	echo -e "${COLOR_MAGENTA_B}Mercury Workshop${COLOR_RESET}: Finding the SH1MMER exploit"
 	echo -e "${COLOR_MAGENTA_B}OlyB${COLOR_RESET}: Help with adapting wax to Priism and PID1"
 	echo -e "${COLOR_MAGENTA_B}kxtzownsu${COLOR_RESET}: Help with sed syntax"
-	echo -e "${COLOR_RED_B}simpamsoftware${COLOR_RESET}: Testing Priism and building the very first shims"
+	echo -e "${COLOR_RED_B}Simon${COLOR_RESET}: Testing Priism and building the very first shims"
 	echo -e "${COLOR_YELLOW_B}Darkn${COLOR_RESET}: Hosting shims"
 	echo -e " "
 	read -p "Press enter to continue."
@@ -103,8 +104,11 @@ mkdir /mnt/new_root
 mkdir /mnt/shimroot
 mkdir /mnt/recoroot
 
-priism_images="$(cgpt find -l PRIISM_IMAGES || fail 'Failed to find PRIISM_IMAGES partition!' | head -n 1 | grep --color=never /dev/)"
-priism_disk="$(echo "$priism_images" | sed -E 's|/dev/(mmcblk[0-9]+)p[0-9]+$|/dev/\1|; s|/dev/(sd[a-z])[0-9]+$|/dev/\1|')" || fail 'Failed to find Priism disk!' # what the fuck? (thank you sophie)
+
+# Wow. Just wow.
+# Why didn't I think of any of this before.
+priism_images="/dev/disk/by-label/PRIISM_IMAGES"
+priism_disk=$(echo /dev/$(lsblk -ndo pkname ${priism_images} || echo -e "${COLOR_YELLOW_B}Warning${COLOR_RESET}: Failed to enumerate disk! Resizing will most likely fail."))
 
 board_name="$(cat /sys/devices/virtual/dmi/id/board_name || fail "Could not get board name!" | head -n 1)"
 source /etc/lsb-release
@@ -202,10 +206,6 @@ installcros() {
 			err3="              and if it looks fine, report it to the GitHub repo!\n"
 			fail "${err1}${err2}${err3}"
 		fi
-		local cros_dev="$(get_largest_cros_blockdev)"
-		if [ -z "$cros_dev" ]; then
-			fail "No CrOS drive found on device! Please make sure ChromeOS is installed before using Priism."
-		fi
 		stateful="$(cgpt find -l STATE ${loop} | head -n 1 | grep --color=never /dev/)" || fail "Failed to find stateful partition on ${loop}!"
 		mount $stateful /mnt/stateful_partition || fail "Failed to mount stateful partition!"
 		MOUNTS="/proc /dev /sys /tmp /run /var /mnt/stateful_partition" 
@@ -215,7 +215,8 @@ installcros() {
 	  		mount -n --bind "${d}" "./${d}"
 	  		mount --make-slave "./${d}"
 		done
-		chroot ./ /usr/sbin/chromeos-install --payload_image "${loop}" --dst "${cros_dev}" --yes || fail "Failed during chroot!"
+		chroot ./ /usr/sbin/chromeos-install --payload_image "${loop}" --use_payload_kern_b --yes || fail "Failed during chroot!"
+		# Juusst in case.
 		cgpt add -i 2 $cros_dev -P 15 -T 15 -S 1 -R 1 || fail "Failed to set kernel priority!"
 		echo -e "${COLOR_GREEN}\n"
 		read -p "Recovery finished. Press any key to reboot."
