@@ -4,6 +4,8 @@ clear
 
 releaseBuild=1
 recoroot="/mnt/recoroot"
+shimroot="/mnt/shimroot"
+
 
 COLOR_RESET="\033[0m"
 COLOR_BLACK_B="\033[1;30m"
@@ -75,7 +77,8 @@ splash() {
 	echo -e "                      Priism                      "
 	echo -e "                        or                        "
 	echo -e "  Portable recovery image installer/shim manager  "
-	echo -e "                     v1.2 dev                    "
+	echo -e "                     v2.0 dev                     "
+	echo -e "                   [2025-05-21]                   "
 	funText
 	echo -e " "
 }
@@ -110,13 +113,8 @@ mkdir /mnt/recoroot
 priism_images="/dev/disk/by-label/PRIISM_IMAGES"
 priism_disk=$(echo /dev/$(lsblk -ndo pkname ${priism_images} || echo -e "${COLOR_YELLOW_B}Warning${COLOR_RESET}: Failed to enumerate disk! Resizing will most likely fail."))
 
-### The below is CRUCIAL for support when booting off of a Chomped shim.
-priism_dev=$(blkid -L PRIISM_IMAGES)
-priism_partnum=$(echo "$dev" | grep -o '[0-9]*$')
-### The above is CRUCIAL for support when booting off of a Chomped shim.
-
 board_name="$(cat /sys/devices/virtual/dmi/id/board_name || fail "Could not get board name!" | head -n 1)"
-source /etc/lsb-release
+source /etc/lsb-release 2&> /dev/null
 
 mount $priism_images /mnt/priism || fail "Failed to mount PRIISM_IMAGES partition!"
 
@@ -129,7 +127,7 @@ if [ ! -z "$(ls -A /mnt/priism/.IMAGES_NOT_YET_RESIZED 2> /dev/null)" ]; then # 
 	
 	umount $priism_images
 	
-	growpart $priism_disk $priism_partnum # growpart. why. why did you have to be different.
+	growpart $priism_disk 5 # growpart. why. why did you have to be different.
 	e2fsck -f $priism_images
 	
 	echo -e "${COLOR_GREEN}Info: Resizing filesystem (This operation may take a while, do not panic if it looks stuck!)${COLOR_RESET}"
@@ -149,29 +147,168 @@ recochoose=(/mnt/priism/recovery/*)
 shimchoose=(/mnt/priism/shims/*)
 selpayload=(/mnt/priism/payloads/*.sh)
 
-shimboot() {
-	# find /mnt/priism/shims -type f
-	# while true; do
-		#read -p "Please choose a shim to boot: " shimtoboot
-		#
-		#if [[ $shimtoboot == "exit" ]]
-		#then
-		# 	break
-		#fi
-		#
-		#if [[ ! -f /mnt/priism/shims/$shimtoboot ]]
-		#then
-		#	echo -e "File not found! Try again."
-		#else
-		#	echo -e "Function not yet implemented."
-		#fi
-	#done
-	echo -e "${COLOR_RED_B}Function not yet implemented!${COLOR_RESET}\n"
-	read -p "Press enter to continue."
-	#losetup -D
-	clear
-	splash
+NEWROOT_MNT=/mnt/shimroot
+STATEFUL_MNT=/stateful
+
+export_args() {
+  # We trust our kernel command line explicitly.
+  local arg=
+  local key=
+  local val=
+  local acceptable_set='[A-Za-z0-9]_'
+  echo "Exporting kernel arguments..."
+  for arg in "$@"; do
+    key=$(echo "${arg%%=*}" | busybox tr 'a-z' 'A-Z' | \
+                   busybox tr -dc "$acceptable_set" '_')
+    val="${arg#*=}"
+    export "KERN_ARG_$key"="$val"
+    echo -n " KERN_ARG_$key=$val,"
+  done
+  echo ""
 }
+
+export_args $(cat /proc/cmdline | sed -e 's/"[^"]*"/DROPPED/g') 1> /dev/null
+
+copy_lsb() {
+  echo "Copying lsb..."
+
+  local lsb_file="dev_image/etc/lsb-factory"
+  local dest_path="${NEWROOT_MNT}/mnt/stateful_partition/${lsb_file}"
+  local src_path="${STATEFUL_MNT}/${lsb_file}"
+
+  mkdir -p "$(dirname "${dest_path}")"
+
+  local ret=0
+  if [ -f "${src_path}" ]; then
+    # Convert kern_guid to uppercase and store extra info
+    local kern_guid=$(echo "${KERN_ARG_KERN_GUID}" | tr '[:lower:]' '[:upper:]')
+    echo "Found ${src_path}"
+    cp -a "${src_path}" "${dest_path}"
+    echo "REAL_USB_DEV=${loop}p3" >>"${dest_path}"
+    echo "KERN_ARG_KERN_GUID=${kern_guid}" >>"${dest_path}"
+  else
+    echo "Failed to find ${src_path}!!"
+    ret=1
+  fi
+  return "${ret}"
+}
+
+pv_dircopy() {
+	[ -d "$1" ] || return 1
+	local apparent_bytes
+	apparent_bytes=$(du -sb "$1" | cut -f 1)
+	mkdir -p "$2"
+	tar -cf - -C "$1" . | pv -f -s "${apparent_bytes:-0}" | tar -xf - -C "$2"
+}
+
+shimboot() {
+	if [[ -z "$(ls -A /mnt/priism/shims)" ]]; then
+		echo -e "${COLOR_YELLOW_B}You have no shims downloaded!\nPlease download a few images for your board ${board_name} (${CHROMEOS_RELEASE_BOARD}) into the shims folder on PRIISM_IMAGES!"
+		echo -e "If you have a computer running Windows, use Ext4Fsd or this chrome device. If you have a Mac, use this chrome device to download images instead.${COLOR_RESET}\n"
+		shim="Exit"
+	else
+		echo -e "Choose the shim you want to boot:"
+		select FILE in "${shimchoose[@]}" "Exit"; do
+			if [[ -n "$FILE" ]]; then
+				shim=$FILE
+				break
+			elif [[ $FILE == "Exit" ]]; then
+				shim=$FILE
+				break
+			fi
+		done
+	fi
+
+	if [[ $shim == "Exit" ]]; then
+		read -p "Press enter to continue."
+		clear
+		splash
+	else
+		mkdir -p $shimroot
+		echo -e "Searching for ROOT-A on shim..."
+		loop=$(losetup -fP --show $shim)
+		export loop
+
+		loop_root="$(cgpt find -l ROOT-A $loop || cgpt find -t rootfs $loop | head -n 1)"
+
+		if mount "${loop_root}" $shimroot; then
+			echo -e "ROOT-A found successfully and mounted."
+		else
+			result=$?
+			err1="Mount process failed! Exit code was ${result}.\n"
+			err2="              This may be a bug! Please check your recovery image,\n"
+			err3="              and if it looks fine, report it to the GitHub repo!\n"
+			fail "${err1}${err2}${err3}"
+		fi
+
+		if ! stateful="$(cgpt find -l STATE ${loop} | head -n 1 | grep --color=never /dev/)"; then
+			echo -e "${COLOR_YELLOW_B}Finding stateful via partition label \"STATE\" failed (try 1...)${COLOR_RESET}"
+
+			if ! stateful="$(cgpt find -l SH1MMER ${loop} | head -n 1 | grep --color=never /dev/)"; then
+				echo -e "${COLOR_YELLOW_B} Finding stateful via partition label \"SH1MMER\" failed (try 2...)${COLOR_RESET}"
+
+				for dev in "$loop"*; do
+					[[ -b "$dev" ]] || continue
+					parttype=$(udevadm info --query=property --name="$dev" 2>/dev/null | grep '^ID_PART_ENTRY_TYPE=' | cut -d= -f2)
+					if [ "$parttype" = "0fc63daf-8483-4772-8e79-3d69d8477de4" ]; then
+						stateful="$dev"
+						break
+					fi
+				done
+			fi
+
+			if [[ -z "${stateful// }" ]]; then
+				echo -e "${COLOR_RED_B} Finding stateful via partition type \"Linux data\" failed! (try 3...)${COLOR_RESET}"
+				fail "Could not find stateful partition!"
+			fi
+		fi
+
+		mkdir -p /stateful
+		mkdir -p /newroot
+
+		mount -t tmpfs tmpfs /newroot -o "size=1024M" || fail "Could not allocate 1GB of TMPFS to the newroot mountpoint."
+		mount $stateful /stateful || fail "Failed to mount stateful partition!"
+
+		copy_lsb
+
+		echo "Copying rootfs to ram."
+		pv_dircopy "$shimroot" /newroot
+
+		echo "Moving mounts..."
+		mkdir -p "/newroot/dev" "/newroot/proc" "/newroot/sys" "/newroot/tmp" "/newroot/run"
+		mount -t tmpfs -o mode=1777 none /newroot/tmp
+		mount -t tmpfs -o mode=0555 run /newroot/run
+		mkdir -p -m 0755 /newroot/run/lock
+
+		umount -l /dev/pts
+		umount -f /dev/pts
+
+		mounts=("/dev" "/proc" "/sys")
+		for mnt in "${mounts[@]}"; do
+			mount --move "$mnt" "/newroot$mnt"
+			umount -l "$mnt"
+		done
+
+		echo "Done."
+		echo "About to switch root. If your screen goes black and the device reboots, it may be a bug. Please make a GitHub issue if you're sure your shim isn't corrupted."
+		sleep 1
+		echo "Switching root!"
+		clear
+
+		mkdir -p /newroot/tmp/priism
+		pivot_root /newroot /newroot/tmp/priism
+
+		echo "Starting init"
+		exec /sbin/init || {
+			echo "Failed to start init!!!"
+			echo "Bailing out, you are on your own. Good luck."
+			echo "This shell has PID 1. Exit = panic."
+			/tmp/priism/bin/uname -a
+			exec /tmp/priism/bin/sh
+		}
+	fi
+}
+
 
 installcros() {
 	if [[ -z "$(ls -A /mnt/priism/recovery)" ]]; then
@@ -201,7 +338,7 @@ installcros() {
 		mkdir -p $recoroot
 		echo -e "Searching for ROOT-A on reco image..."
 		loop=$(losetup -fP --show $reco)
-		loop_root="$(cgpt find -l ROOT-A $loop)"
+		loop_root="$(cgpt find -l ROOT-A $loop | head -n 1)" # Usually the 3rd partition is always the "real" ROOT-A
 		if mount -r "${loop_root}" $recoroot ; then
 			echo -e "ROOT-A found successfully and mounted."
 		else
@@ -235,7 +372,8 @@ installcros() {
 rebootdevice() {
 	if [[ releaseBuild -eq 1 ]]; then
 		echo -e "Rebooting..."
-		reboot
+		sync
+		reboot -f
 		sleep 1
 		echo -e "${COLOR_RED_B}Reboot failed. Hanging..."
 		hang
@@ -250,7 +388,8 @@ rebootdevice() {
 shutdowndevice() {
 	if [[ releaseBuild -eq 1 ]]; then
 		echo -e "Shutting down..."
-		shutdown -h now
+		sync
+		poweroff -f
 		sleep 1
 		echo -e "${COLOR_RED_B}Shutdown failed. Hanging..."
 		hang
@@ -305,11 +444,18 @@ payloads() {
 		clear
 		splash
 	else
-		bash $payload
+		source $payload
 		read -p "Press enter to continue."
 		clear
 		splash
 	fi
+}
+
+changelog() {
+	cat /changelog.txt | busybox less
+	read -p "Press enter to continue."
+	clear
+	splash
 }
 
 while true; do
@@ -319,8 +465,9 @@ while true; do
 	echo -e "(3 or i) Install a ChromeOS recovery image"
 	echo -e "(4 or a) Payloads"
 	echo -e "(5 or c) Credits"
-	echo -e "(6 or r) Reboot"
-	echo -e "(7 or p) Power off"
+	echo -e "(6 or l) Changelog"
+	echo -e "(7 or r) Reboot"
+	echo -e "(8 or p) Power off"
 	if [[ releaseBuild -eq 0 ]]; then
 		echo -e "(8 or e) Exit [Debug]"
 	fi
@@ -331,9 +478,10 @@ while true; do
 	3 | i | I) installcros ;;
 	4 | a | A) payloads ;;
 	5 | c | C) credits ;;
-	6 | r | R) rebootdevice ;;
-	7 | p | P) shutdowndevice ;;
-	8 | e | E) exitdebug ;;
+	6 | l | L) changelog ;;
+	7 | r | R) rebootdevice ;;
+	8 | p | P) shutdowndevice ;;
+	9 | e | E) exitdebug ;;
 	*) clear && echo -e "Invalid option $choice" ;;
 	esac
 	echo -e ""

@@ -1,0 +1,38 @@
+=== Priism changelog ===
+Last updated: May 21, 2025 8:00 PM EST
+
+== 2.0 dev [2025-05-21] ==
+Priism now runs as PID 1! Horray.
+New "priisminit" init system for some interesting behind the scenes stuff.
+Shim booting implementation finished (after an entire year...)
+Removed Ethereal Workshop branding (2/2)
+Added script date on splash screen.
+Changelog added.
+
+== 1.2 dev [2025-05-20] ==
+Fixed some major flaws with Priism. Images and disk detection have been reworked entirely.
+Fixed PRIISM_IMAGES resizing (growpart issues).
+Removed stateful detection logic from installcros(). chromeos-recovery finds internal storage automatically.
+Fixed some name typos lmfaoooo. 
+Updated the name "Archimax" in credits to "xmb9".
+Removed Ethereal Workshop branding (1/2)
+
+== 1.1 stable [2025-02-05] ==
+Updated installcros() to fix installing recovery images on ChromeOS versions above ~113.
+Added "payloads" menu. Quick and dirty replacement for those who needed some things that shims provide but not all.
+
+== 1.0 stable [2025-01-15] ==
+Priism is now MUCH more (skid)user-friendly. 
+Added update_device.sh script.
+
+== 0.9a [2025-01-12] ==
+Rebranded from "CROSMIDI" to "Priism".
+Fixed recovery (kernel priority is now set).
+Added auto-resizer inside of Priism.
+
+== 0.8 [2024-05-20] ==
+Implemented installing recovery media.
+Added builder. Uses a SH1MMER legacy (Oct 2024+) image as a base.
+
+== 0.1 [2024-01-20] ==
+Basic shim booting implementation added. Uses chroot. Kind of lame.
