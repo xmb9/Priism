@@ -15,7 +15,7 @@ Mirrors with a star next to them may not have all boards uploaded yet.
 
 # FAQ (Frequently Asked Questions)
 <details>
-  <summary><b>I wanna use Shimboot. How can I?</b></b>summary>
+  <summary><b>I wanna use Shimboot. How can I?</b></summary>
 
   Use the [respective Shimboot fork for Priism](https://github.com/xmb9/shimboot-priism).
 </details>
