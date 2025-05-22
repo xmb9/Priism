@@ -5,7 +5,6 @@ Portable recovery image installer/shim manager based on [SH1MMER Legacy](https:/
 Recovery :white_check_mark:<br>
 Payloads menu :white_check_mark:<br>
 Booting other shims :white_check_mark:<br>
-Synaptic :x:<br>
 
 # Downloads
 ~~[Official Prebuilts](https://dl.archima.xyz/Priism)~~<br>

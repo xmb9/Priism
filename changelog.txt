@@ -1,5 +1,5 @@
 === Priism changelog ===
-Last updated: May 21, 2025 8:00 PM EST
+Last updated: May 21, 2025 9:18 PM EST
 
 == 2.0 dev [2025-05-21] ==
 Priism now runs as PID 1! Horray.
@@ -8,6 +8,7 @@ Shim booting implementation finished (after an entire year...)
 Removed Ethereal Workshop branding (2/2)
 Added script date on splash screen.
 Changelog added.
+README updated to match shim booting and payload operation status.
 
 == 1.2 dev [2025-05-20] ==
 Fixed some major flaws with Priism. Images and disk detection have been reworked entirely.
