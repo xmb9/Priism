@@ -357,9 +357,10 @@ installcros() {
 	  		mount -n --bind "${d}" "./${d}"
 	  		mount --make-slave "./${d}"
 		done
+  		local cros_dev="$(get_largest_cros_blockdev)" # not that important
 		chroot ./ /usr/sbin/chromeos-install --payload_image "${loop}" --use_payload_kern_b --yes || fail "Failed during chroot!"
 		# Juusst in case.
-		cgpt add -i 2 $cros_dev -P 15 -T 15 -S 1 -R 1 || fail "Failed to set kernel priority!"
+		cgpt add -i 2 $cros_dev -P 15 -T 15 -S 1 -R 1
 		echo -e "${COLOR_GREEN}\n"
 		read -p "Recovery finished. Press any key to reboot."
 		reboot
