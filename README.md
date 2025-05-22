@@ -8,9 +8,22 @@ Booting other shims :white_check_mark:<br>
 
 # Downloads
 ~~[Official Prebuilts](https://dl.archima.xyz/Priism)~~<br>
-~~[Fanqyxl's File Host](https://dl.fanqyxl.net/Priism)~~<br>
+[Fanqyxl's File Host*](https://dl.fanqyxl.net/Priism)<br>
 
 Mirrors that are crossed out don't have Priism uploaded yet.
+Mirrors with a star next to them may not have all boards uploaded yet.
+
+# FAQ (Frequently Asked Questions)
+<details>
+  <summary><b>I wanna use Shimboot. How can I?</b></b>summary>
+
+  Use the [respective Shimboot fork for Priism](https://github.com/xmb9/shimboot-priism).
+</details>
+<details>
+  <summary><b>Does Priism work on Chomp?</b></summary>
+
+  Priism 2.0 was developed entirely on Chomp!
+</details>
 
 # Credits
 - [xmb9](https://discord.com/users/988950574387068968) - Pioneering the creation of this tool

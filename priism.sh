@@ -259,7 +259,8 @@ shimboot() {
 
 			if [[ -z "${stateful// }" ]]; then
 				echo -e "${COLOR_RED_B} Finding stateful via partition type \"Linux data\" failed! (try 3...)${COLOR_RESET}"
-				fail "Could not find stateful partition!"
+				echo -e "Last resort (try 4...)"
+				stateful="${loop}p1"
 			fi
 		fi
 
