@@ -461,7 +461,7 @@ changelog() {
 while true; do
 	echo -e "Select an option:"
 	echo -e "(1 or b) Bash shell"
-	echo -e "(2 or s) Boot an RMA shim (Not implemented yet!)"
+	echo -e "(2 or s) Boot an RMA shim"
 	echo -e "(3 or i) Install a ChromeOS recovery image"
 	echo -e "(4 or a) Payloads"
 	echo -e "(5 or c) Credits"
