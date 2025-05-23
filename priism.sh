@@ -2,7 +2,7 @@
 
 clear
 
-releaseBuild=1
+releaseBuild=0
 recoroot="/mnt/recoroot"
 shimroot="/mnt/shimroot"
 
@@ -78,7 +78,7 @@ splash() {
 	echo -e "                        or                        "
 	echo -e "  Portable recovery image installer/shim manager  "
 	echo -e "                     v2.0 dev                     "
-	echo -e "                   [2025-05-21]                   "
+	echo -e "                   [2025-05-23]                   "
 	funText
 	echo -e " "
 }
@@ -236,26 +236,46 @@ shimboot() {
 		else
 			result=$?
 			err1="Mount process failed! Exit code was ${result}.\n"
-			err2="              This may be a bug! Please check your recovery image,\n"
+			err2="              This may be a bug! Please check your shim,\n"
 			err3="              and if it looks fine, report it to the GitHub repo!\n"
 			fail "${err1}${err2}${err3}"
 		fi
-
-		if ! stateful="$(cgpt find -l STATE ${loop} | head -n 1 | grep --color=never /dev/)"; then
-			echo -e "${COLOR_YELLOW_B}Finding stateful via partition label \"STATE\" failed (try 1...)${COLOR_RESET}"
-
-			if ! stateful="$(cgpt find -l SH1MMER ${loop} | head -n 1 | grep --color=never /dev/)"; then
-				echo -e "${COLOR_YELLOW_B} Finding stateful via partition label \"SH1MMER\" failed (try 2...)${COLOR_RESET}"
-
-				for dev in "$loop"*; do
-					[[ -b "$dev" ]] || continue
-					parttype=$(udevadm info --query=property --name="$dev" 2>/dev/null | grep '^ID_PART_ENTRY_TYPE=' | cut -d= -f2)
-					if [ "$parttype" = "0fc63daf-8483-4772-8e79-3d69d8477de4" ]; then
-						stateful="$dev"
-						break
-					fi
-				done
+		unpatched_shimboot=0
+		if cat /mnt/shimroot/sbin/bootstrap.sh | grep "Shimboot OS Selector" --quiet; then
+			echo -e "${COLOR_YELLOW_B}Shimboot (unpatched) detected. Please use shimboot-priism.${COLOR_RESET}"
+			losetup -D
+			unpatched_shimboot=1
+			read -p "Press enter to continue."
+			clear
+			splash
+			return
+		elif cat /mnt/shimroot/sbin/bootstrap.sh | grep "Priishimboot OS Selector" --quiet; then
+			echo -e "${COLOR_GREEN}Priishimboot detected.${COLOR_RESET}"
+			if ! cgpt find -l "shimboot_rootfs:priism" 2&>/dev/null; then
+				echo -e "${COLOR_YELLOW_B}Please use Priishimbooter before booting!${COLOR_RESET}"
+				losetup -D
+				unpatched_shimboot=1
+				read -p "Press enter to continue."
+				clear
+				splash
+				return
 			fi
+		else
+			if ! stateful="$(cgpt find -l STATE ${loop} | head -n 1 | grep --color=never /dev/)"; then
+				echo -e "${COLOR_YELLOW_B}Finding stateful via partition label \"STATE\" failed (try 1...)${COLOR_RESET}"
+
+				if ! stateful="$(cgpt find -l SH1MMER ${loop} | head -n 1 | grep --color=never /dev/)"; then
+					echo -e "${COLOR_YELLOW_B} Finding stateful via partition label \"SH1MMER\" failed (try 2...)${COLOR_RESET}"
+
+					for dev in "$loop"*; do
+						[[ -b "$dev" ]] || continue
+						parttype=$(udevadm info --query=property --name="$dev" 2>/dev/null | grep '^ID_PART_ENTRY_TYPE=' | cut -d= -f2)
+						if [ "$parttype" = "0fc63daf-8483-4772-8e79-3d69d8477de4" ]; then
+							stateful="$dev"
+							break
+						fi
+					done
+				fi
 
 			if [[ -z "${stateful// }" ]]; then
 				echo -e "${COLOR_RED_B} Finding stateful via partition type \"Linux data\" failed! (try 3...)${COLOR_RESET}"
@@ -264,49 +284,52 @@ shimboot() {
 			fi
 		fi
 
-		mkdir -p /stateful
-		mkdir -p /newroot
+		if (( $unpatched_shimboot == 0 )); then
+			mkdir -p /stateful
+			mkdir -p /newroot
 
-		mount -t tmpfs tmpfs /newroot -o "size=1024M" || fail "Could not allocate 1GB of TMPFS to the newroot mountpoint."
-		mount $stateful /stateful || fail "Failed to mount stateful partition!"
+			mount -t tmpfs tmpfs /newroot -o "size=1024M" || fail "Could not allocate 1GB of TMPFS to the newroot mountpoint."
+			mount $stateful /stateful || fail "Failed to mount stateful partition!"
 
-		copy_lsb
+			copy_lsb
 
-		echo "Copying rootfs to ram."
-		pv_dircopy "$shimroot" /newroot
+			echo "Copying rootfs to ram."
+			pv_dircopy "$shimroot" /newroot
 
-		echo "Moving mounts..."
-		mkdir -p "/newroot/dev" "/newroot/proc" "/newroot/sys" "/newroot/tmp" "/newroot/run"
-		mount -t tmpfs -o mode=1777 none /newroot/tmp
-		mount -t tmpfs -o mode=0555 run /newroot/run
-		mkdir -p -m 0755 /newroot/run/lock
+			echo "Moving mounts..."
+			mkdir -p "/newroot/dev" "/newroot/proc" "/newroot/sys" "/newroot/tmp" "/newroot/run"
+			mount -t tmpfs -o mode=1777 none /newroot/tmp
+			mount -t tmpfs -o mode=0555 run /newroot/run
+			mkdir -p -m 0755 /newroot/run/lock
 
-		umount -l /dev/pts
-		umount -f /dev/pts
+			umount -l /dev/pts
+			umount -f /dev/pts
 
-		mounts=("/dev" "/proc" "/sys")
-		for mnt in "${mounts[@]}"; do
-			mount --move "$mnt" "/newroot$mnt"
-			umount -l "$mnt"
-		done
+			mounts=("/dev" "/proc" "/sys")
+			for mnt in "${mounts[@]}"; do
+				mount --move "$mnt" "/newroot$mnt"
+				umount -l "$mnt"
+			done
 
-		echo "Done."
-		echo "About to switch root. If your screen goes black and the device reboots, it may be a bug. Please make a GitHub issue if you're sure your shim isn't corrupted."
-		sleep 1
-		echo "Switching root!"
-		clear
+			echo "Done."
+			echo "About to switch root. If your screen goes black and the device reboots, it may be a bug. Please make a GitHub issue if you're sure your shim isn't corrupted."
+			sleep 1
+			echo "Switching root!"
+			clear
 
-		mkdir -p /newroot/tmp/priism
-		pivot_root /newroot /newroot/tmp/priism
+			mkdir -p /newroot/tmp/priism
+			pivot_root /newroot /newroot/tmp/priism
 
-		echo "Starting init"
-		exec /sbin/init || {
-			echo "Failed to start init!!!"
-			echo "Bailing out, you are on your own. Good luck."
-			echo "This shell has PID 1. Exit = panic."
-			/tmp/priism/bin/uname -a
-			exec /tmp/priism/bin/sh
-		}
+			echo "Starting init"
+			exec /sbin/init || {
+				echo "Failed to start init!!!"
+				echo "Bailing out, you are on your own. Good luck."
+				echo "This shell has PID 1. Exit = panic."
+				/tmp/priism/bin/uname -a
+				exec /tmp/priism/bin/sh
+			}
+			fi
+		fi
 	fi
 }
 
