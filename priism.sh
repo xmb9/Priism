@@ -505,7 +505,7 @@ while true; do
 	echo -e "(7 or r) Reboot"
 	echo -e "(8 or p) Power off"
 	if [[ releaseBuild -eq 0 ]]; then
-		echo -e "(8 or e) Exit [Debug]"
+		echo -e "(9 or e) Exit [Debug]"
 	fi
 	read -p "> " choice
 	case "$choice" in
