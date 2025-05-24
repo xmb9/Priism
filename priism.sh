@@ -31,7 +31,12 @@ fail() {
 hang() {
 	tput civis
 	stty -echo
-	while :; do sleep 1d; done
+	sleep 1h
+	echo "You really still haven't turned off your device?"
+	sleep 1d
+	echo "I give up. Bye."
+	sleep 5
+	reboot -f
 }
 
 get_largest_cros_blockdev() {
