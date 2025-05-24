@@ -25,6 +25,12 @@ fi
 fail() {
 	printf "Priism panic: ${COLOR_RED_B}%b${COLOR_RESET}\n" "$*" >&2 || :
 	printf "panic: We are hanging here..."
+	sync
+	umount /mnt/priism/ > /dev/null
+	umount /mnt/shimroot > /dev/null
+	umount /newroot > /dev/null
+	umount /mnt/recoroot > /dev/null
+	losetup -D
 	hang
 }
 
