@@ -2,7 +2,7 @@
 
 clear
 
-releaseBuild=0
+releaseBuild=1
 recoroot="/mnt/recoroot"
 shimroot="/mnt/shimroot"
 
@@ -61,6 +61,10 @@ funText() {
    	echo -e "$selectedSplashText"
 }
 
+detect_priism_in_shimboot_function() {
+	echo "dD0oIkhlYXJzYXkhIiAiSSByZWZ1c2UuIiAiSSBzaGFsbCBkbyBubyBzdWNoIHRoaW5nISIgIkxpa2UuLi4gd2h5Pz8/IiAiSSBjZXJ0YWlubHkgd2lsbCBub3QhIiAiQXJlIHlvdSBqdXN0IGhlcmUgdG8gZGlsbHlkYWRkbGU/IiAiWW91IHJlYWxseSBoYXZlIG5vdGhpbmcgYmV0dGVyIHRvIGRvLCBkb24ndCB5b3U/IikKcz0ke3RbJFJBTkRPTSAlICR7I3RbQF19XX0KZWNobyAtZSAiICIKZWNobyAtZSAiJHMi" | base64 -d | bash
+}
+
 splash() {
 	echo -e "$COLOR_MAGENTA_B                                              ...."
 	echo -e "                        ..                  ......"
@@ -78,7 +82,7 @@ splash() {
 	echo -e "                        or                        "
 	echo -e "  Portable recovery image installer/shim manager  "
 	echo -e "                     v2.0 dev                     "
-	echo -e "                   [2025-05-23]                   "
+	echo -e "                   [2025-05-24]                   "
 	funText
 	echo -e " "
 }
@@ -241,18 +245,20 @@ shimboot() {
 			fail "${err1}${err2}${err3}"
 		fi
 		unpatched_shimboot=0
-		if cat /mnt/shimroot/sbin/bootstrap.sh | grep "Shimboot OS Selector" --quiet; then
+		if cat /mnt/shimroot/sbin/bootstrap.sh | grep "│ Shimboot OS Selector" --quiet; then
 			echo -e "${COLOR_YELLOW_B}Shimboot (unpatched) detected. Please use shimboot-priism.${COLOR_RESET}"
+			umount /mnt/shimroot
 			losetup -D
 			unpatched_shimboot=1
 			read -p "Press enter to continue."
 			clear
 			splash
 			return
-		elif cat /mnt/shimroot/sbin/bootstrap.sh | grep "Priishimboot OS Selector" --quiet; then
+		elif cat /mnt/shimroot/sbin/bootstrap.sh | grep "│ Priishimboot OS Selector" --quiet; then
 			echo -e "${COLOR_GREEN}Priishimboot detected.${COLOR_RESET}"
-			if ! cgpt find -l "shimboot_rootfs:priism" 2&>/dev/null; then
+			if ! cgpt find -l "shimboot_rootfs:priism" > /dev/null; then
 				echo -e "${COLOR_YELLOW_B}Please use Priishimbooter before booting!${COLOR_RESET}"
+				umount /mnt/shimroot
 				losetup -D
 				unpatched_shimboot=1
 				read -p "Press enter to continue."
@@ -260,28 +266,34 @@ shimboot() {
 				splash
 				return
 			fi
-		else
-			if ! stateful="$(cgpt find -l STATE ${loop} | head -n 1 | grep --color=never /dev/)"; then
-				echo -e "${COLOR_YELLOW_B}Finding stateful via partition label \"STATE\" failed (try 1...)${COLOR_RESET}"
+		fi
+		if cat /mnt/shimroot/usr/sbin/sh1mmer_main.sh | grep "Portable recovery image installer/shim manager" --quiet; then
+			echo -e "${COLOR_YELLOW_B}$(detect_priism_in_shimboot_function)${COLOR_RESET}"
+			losetup -D
+			read -p "Press enter to continue."
+			clear
+			splash
+			return
+		fi
+		if ! stateful="$(cgpt find -l STATE ${loop} | head -n 1 | grep --color=never /dev/)"; then
+			echo -e "${COLOR_YELLOW_B}Finding stateful via partition label \"STATE\" failed (try 1...)${COLOR_RESET}"
+			if ! stateful="$(cgpt find -l SH1MMER ${loop} | head -n 1 | grep --color=never /dev/)"; then
+				echo -e "${COLOR_YELLOW_B} Finding stateful via partition label \"SH1MMER\" failed (try 2...)${COLOR_RESET}"
 
-				if ! stateful="$(cgpt find -l SH1MMER ${loop} | head -n 1 | grep --color=never /dev/)"; then
-					echo -e "${COLOR_YELLOW_B} Finding stateful via partition label \"SH1MMER\" failed (try 2...)${COLOR_RESET}"
-
-					for dev in "$loop"*; do
-						[[ -b "$dev" ]] || continue
-						parttype=$(udevadm info --query=property --name="$dev" 2>/dev/null | grep '^ID_PART_ENTRY_TYPE=' | cut -d= -f2)
-						if [ "$parttype" = "0fc63daf-8483-4772-8e79-3d69d8477de4" ]; then
-							stateful="$dev"
-							break
-						fi
-					done
-				fi
-
-			if [[ -z "${stateful// }" ]]; then
-				echo -e "${COLOR_RED_B} Finding stateful via partition type \"Linux data\" failed! (try 3...)${COLOR_RESET}"
-				echo -e "Last resort (try 4...)"
-				stateful="${loop}p1"
+				for dev in "$loop"*; do
+					[[ -b "$dev" ]] || continue
+					parttype=$(udevadm info --query=property --name="$dev" 2>/dev/null | grep '^ID_PART_ENTRY_TYPE=' | cut -d= -f2)
+					if [ "$parttype" = "0fc63daf-8483-4772-8e79-3d69d8477de4" ]; then
+						stateful="$dev"
+						break
+					fi
+				done
 			fi
+		fi
+		if [[ -z "${stateful// }" ]]; then
+			echo -e "${COLOR_RED_B} Finding stateful via partition type \"Linux data\" failed! (try 3...)${COLOR_RESET}"
+			echo -e "Last resort (try 4...)"
+			stateful="${loop}p1"
 		fi
 
 		if (( $unpatched_shimboot == 0 )); then
@@ -328,7 +340,6 @@ shimboot() {
 				/tmp/priism/bin/uname -a
 				exec /tmp/priism/bin/sh
 			}
-			fi
 		fi
 	fi
 }
