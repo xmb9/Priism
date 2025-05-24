@@ -253,7 +253,7 @@ draw() {
 
     # KEYBINDINGS
     highlight_text
-    printf "Use arrow keys to navigate. Press enter to confirm. Press \"Q\" to exit.\n\r"
+    printf "Use arrow keys to navigate. Press enter to confirm.\n\r"
     reset_text
 
 
@@ -303,11 +303,6 @@ main() {
 
             "") # user chose/selected option
                 _CHOSEN=${_OPTIONS[((_CUR - 1))]}
-                restore
-                break
-                ;;
-
-            'q') # quit
                 restore
                 break
                 ;;

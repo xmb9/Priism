@@ -1,5 +1,5 @@
 === Priism changelog ===
-Last updated: May 24, 2025 2:37 AM EST
+Last updated: May 24, 2025 2:42 AM EST
 
 == 2.0 release candidate [2025-05-24] ==
 New TUI menu for Priism! No longer uses the old style options select. Very similar to SH1MMER's payload menu, but actually good.
@@ -7,6 +7,7 @@ Easter eggs :)
 Shimboot detection (will prevent you from booting non-Priishimboot images).
 Failsafe if user has not ran Priishimbooter when booting Priishimboot.
 New splash text!
+Fixed an oversight in shmenu that allowed users to "Quit" the main menu.
 Updated changelog (duh).
 
 == 2.0 dev [2025-05-21] ==
