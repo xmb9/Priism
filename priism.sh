@@ -6,7 +6,6 @@ releaseBuild=1
 recoroot="/mnt/recoroot"
 shimroot="/mnt/shimroot"
 
-
 COLOR_RESET="\033[0m"
 COLOR_BLACK_B="\033[1;30m"
 COLOR_RED_B="\033[1;31m"
@@ -26,10 +25,10 @@ fail() {
 	printf "Priism panic: ${COLOR_RED_B}%b${COLOR_RESET}\n" "$*" >&2 || :
 	printf "panic: We are hanging here..."
 	sync
-	umount /mnt/priism/ > /dev/null
-	umount /mnt/shimroot > /dev/null
-	umount /newroot > /dev/null
-	umount /mnt/recoroot > /dev/null
+	umount /mnt/priism/ &> /dev/null
+	umount /mnt/shimroot &> /dev/null
+	umount /newroot &> /dev/null
+	umount /mnt/recoroot &> /dev/null
 	losetup -D
 	hang
 }
@@ -66,39 +65,57 @@ get_largest_cros_blockdev() {
 }
 
 funText() {
-	splashText=("       Triangle is love, triangle is life." "             Placeholder splash text" "    The lower tape fade meme is still massive")
+	splashText=("       Triangle is love, triangle is life." "             Placeholder splash text" "    The lower tape fade meme is still massive" "               Now in TUI format!" " The average reaction after talking with fanqyxl" " Discord speech impediment... oh wait that's AC3")
   	selectedSplashText=${splashText[$RANDOM % ${#splashText[@]}]}
 	echo -e " "
    	echo -e "$selectedSplashText"
 }
+
+funTextbutGay() {
+	splashText=("Triangle is love, triangle is life." "Placeholder splash text" "The lower tape fade meme is still massive" "Now in TUI format!" "The average reaction after talking with fanqyxl" "Discord speech impediment... oh wait that's AC3")
+  	selectedSplashText=${splashText[$RANDOM % ${#splashText[@]}]}
+   	echo -e "$selectedSplashText"
+}
+
 
 detect_priism_in_shimboot_function() {
 	echo "dD0oIkhlYXJzYXkhIiAiSSByZWZ1c2UuIiAiSSBzaGFsbCBkbyBubyBzdWNoIHRoaW5nISIgIkxpa2UuLi4gd2h5Pz8/IiAiSSBjZXJ0YWlubHkgd2lsbCBub3QhIiAiQXJlIHlvdSBqdXN0IGhlcmUgdG8gZGlsbHlkYWRkbGU/IiAiWW91IHJlYWxseSBoYXZlIG5vdGhpbmcgYmV0dGVyIHRvIGRvLCBkb24ndCB5b3U/IikKcz0ke3RbJFJBTkRPTSAlICR7I3RbQF19XX0KZWNobyAtZSAiICIKZWNobyAtZSAiJHMi" | base64 -d | bash
 }
 
 splash() {
-	echo -e "$COLOR_MAGENTA_B                                              ...."
-	echo -e "                        ..                  ......"
-	echo -e "                       .::.              ........."
-	echo -e "                      .:..:.          ......:::..."
-	echo -e "                     .::..::.      ..::::---:::..."
-	echo -e "  ........          ::::::::::  ..::-====--::.... "
-	echo -e "        ...:::::...::::::::..:::-=++=--:.....     "
-	echo -e "              ....----:::::::::-:.....            "
-	echo -e "                .:-:.........::::.                "
-	echo -e "               .............::::-:.               "
-	echo -e "               ............::::::-:.              "
-	echo -e "              .....::::::::::::::--:  $COLOR_RESET"
-	echo -e "                      Priism                      "
-	echo -e "                        or                        "
-	echo -e "  Portable recovery image installer/shim manager  "
-	echo -e "                     v2.0 dev                     "
-	echo -e "                   [2025-05-24]                   "
+	local width=48
+	local verstring=${VERSION["STRING"]}
+	local build=${VERSION["BUILDDATE"]}
+	local version_pad=$(( (width - ${#verstring}) / 2 ))
+    	local build_pad=$(( (width - ${#build}) / 2 ))
+	echo -e "$COLOR_MAGENTA_B                                             ...."
+	echo -e "                       ..                  ......"
+	echo -e "                      .::.              ........."
+	echo -e "                     .:..:.          ......:::..."
+	echo -e "                    .::..::.      ..::::---:::..."
+	echo -e " ........          ::::::::::  ..::-====--::.... "
+	echo -e "       ...:::::...::::::::..:::-=++=--:.....     "
+	echo -e "             ....----:::::::::-:.....            "
+	echo -e "               .:-:.........::::.                "
+	echo -e "              .............::::-:.               "
+	echo -e "              ............::::::-:.              "
+	echo -e "             .....::::::::::::::--:  $COLOR_RESET"
+	echo -e "                     Priism                      "
+	echo -e "                       or                        "
+	echo -e " Portable recovery image installer/shim manager  "
+	echo -e "$(printf "%*s%s" $version_pad "" "$verstring")"
+	echo -e "$(printf "%*s%s" $build_pad "" "$build")"
 	funText
 	echo -e " "
 }
 
 # version strings: use dev, stable, or release candidate
+declare -A VERSION
+
+VERSION["BRANCH"]="release candidate"
+VERSION["NUMBER"]="2.0"
+VERSION["BUILDDATE"]="[2025-05-24]"
+VERSION["STRING"]="v${VERSION["NUMBER"]} ${VERSION["BRANCH"]}"
 
 credits() {
 	echo -e "${COLOR_MAGENTA_B}Priism credits"
@@ -116,6 +133,8 @@ credits() {
 
 splash
 echo -e "${COLOR_YELLOW_B}Priism is currently in active development. Please report any issues you find.${COLOR_RESET}\n"
+
+read -p "Press enter to continue."
 
 mkdir /mnt/priism
 mkdir /mnt/new_root
@@ -237,7 +256,6 @@ shimboot() {
 	if [[ $shim == "Exit" ]]; then
 		read -p "Press enter to continue."
 		clear
-		splash
 	else
 		mkdir -p $shimroot
 		echo -e "Searching for ROOT-A on shim..."
@@ -263,7 +281,6 @@ shimboot() {
 			unpatched_shimboot=1
 			read -p "Press enter to continue."
 			clear
-			splash
 			return
 		elif cat /mnt/shimroot/sbin/bootstrap.sh | grep "│ Priishimboot OS Selector" --quiet; then
 			echo -e "${COLOR_GREEN}Priishimboot detected.${COLOR_RESET}"
@@ -274,7 +291,6 @@ shimboot() {
 				unpatched_shimboot=1
 				read -p "Press enter to continue."
 				clear
-				splash
 				return
 			fi
 		fi
@@ -283,7 +299,6 @@ shimboot() {
 			losetup -D
 			read -p "Press enter to continue."
 			clear
-			splash
 			return
 		fi
 		if ! stateful="$(cgpt find -l STATE ${loop} | head -n 1 | grep --color=never /dev/)"; then
@@ -379,7 +394,6 @@ installcros() {
 	if [[ $reco == "Exit" ]]; then
 		read -p "Press enter to continue."
 		clear
-		splash
 	else
 		mkdir -p $recoroot
 		echo -e "Searching for ROOT-A on reco image..."
@@ -429,7 +443,6 @@ rebootdevice() {
 	fi
 	read -p "Press enter to continue."
 	clear
-	splash # This should never be reached on releaseBuilds
 }
 
 shutdowndevice() {
@@ -445,7 +458,6 @@ shutdowndevice() {
 	fi
 	read -p "Press enter to continue."
 	clear
-	splash
 }
 
 exitdebug() {
@@ -472,7 +484,7 @@ exitdebug() {
 		echo -e "This option is only available on debug builds."
 	fi
 	read -p "Press enter to continue."
-	splash
+	clear
 }
 
 payloads() {
@@ -489,12 +501,10 @@ payloads() {
 	if [[ $payload == "Exit" ]]; then
 		read -p "Press enter to continue."
 		clear
-		splash
 	else
 		source $payload
 		read -p "Press enter to continue."
 		clear
-		splash
 	fi
 }
 
@@ -502,34 +512,29 @@ changelog() {
 	cat /changelog.txt | busybox less
 	read -p "Press enter to continue."
 	clear
-	splash
 }
 
+if [[ releaseBuild -eq 1 ]]; then
+	OPTIONS=$'Bash shell\nBoot an RMA shim\nInstall a ChromeOS recovery image\nPayloads\nCredits\nChangelog\nReboot\nPower off'
+else
+	OPTIONS=$'Bash shell\nBoot an RMA shim\nInstall a ChromeOS recovery image\nPayloads\nCredits\nChangelog\nReboot\nPower off\nExit [Debug]'
+fi
+
 while true; do
-	echo -e "Select an option:"
-	echo -e "(1 or b) Bash shell"
-	echo -e "(2 or s) Boot an RMA shim"
-	echo -e "(3 or i) Install a ChromeOS recovery image"
-	echo -e "(4 or a) Payloads"
-	echo -e "(5 or c) Credits"
-	echo -e "(6 or l) Changelog"
-	echo -e "(7 or r) Reboot"
-	echo -e "(8 or p) Power off"
-	if [[ releaseBuild -eq 0 ]]; then
-		echo -e "(9 or e) Exit [Debug]"
-	fi
-	read -p "> " choice
-	case "$choice" in
-	1| b | B) bash ;;
-	2 | s | S) shimboot ;;
-	3 | i | I) installcros ;;
-	4 | a | A) payloads ;;
-	5 | c | C) credits ;;
-	6 | l | L) changelog ;;
-	7 | r | R) rebootdevice ;;
-	8 | p | P) shutdowndevice ;;
-	9 | e | E) exitdebug ;;
-	*) clear && echo -e "Invalid option $choice" ;;
+	shmenu -o "$OPTIONS" -p "Main menu - Priism [${VERSION[STRING]}] - $(funTextbutGay)"
+	option=$(cat /tmp/shmenu_choice)
+	clear
+	case "$option" in
+		"Bash shell") bash ;;
+		"Boot an RMA shim") shimboot ;;
+		"Install a ChromeOS recovery image") installcros ;;
+		"Payloads") payloads ;;
+		"Credits") credits ;;
+		"Changelog") changelog ;;
+		"Reboot") rebootdevice ;;
+		"Power off") shutdowndevice ;;
+		"Exit [Debug]") exitdebug ;;
+		*) echo -e "You entered an invalid option (${option})... Somehow."; sleep 1 ;;
 	esac
 	echo -e ""
 done
