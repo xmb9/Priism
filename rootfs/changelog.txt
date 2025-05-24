@@ -1,7 +1,7 @@
 === Priism changelog ===
 Last updated: May 24, 2025 12:50 PM EST
 
-== 2.0 stable [2025-05-25] ==
+== 2.0 stable [2025-05-24] ==
 Priism 2.0 init is now Pint. https://github.com/xmb9/Pint.
 Includes services. Yay. 
 
