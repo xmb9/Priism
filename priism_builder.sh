@@ -55,11 +55,7 @@ patch_sh1mmer() {
 	cp priism.sh "$MNT_SH1MMER/root/noarch/usr/sbin/sh1mmer_main.sh"
 	cp priism_init.sh "$MNT_SH1MMER/bootstrap/noarch/init_sh1mmer.sh"
 	mkdir -p "$MNT_SH1MMER/root/noarch/sbin/" # half the time this doesn't exist. make it.
-	cp priisminit "$MNT_SH1MMER/root/noarch/sbin/priisminit"
-	cp changelog.txt "$MNT_SH1MMER/root/noarch/changelog.txt"
-	cp lib/shmenu.sh "$MNT_SH1MMER/root/noarch/usr/sbin/shmenu"
-	chmod +x "$MNT_SH1MMER/root/noarch/sbin/priisminit"
-	cp growpart.sh "$MNT_SH1MMER/root/noarch/usr/sbin/growpart"
+	cp -r rootfs/* "$MNT_SH1MMER/root/noarch/"
 	chmod -R +x "$MNT_SH1MMER"
 
 	umount "$MNT_SH1MMER"

@@ -112,7 +112,7 @@ splash() {
 # version strings: use dev, stable, or release candidate
 declare -A VERSION
 
-VERSION["BRANCH"]="release candidate"
+VERSION["BRANCH"]="stable"
 VERSION["NUMBER"]="2.0"
 VERSION["BUILDDATE"]="[2025-05-24]"
 VERSION["STRING"]="v${VERSION["NUMBER"]} ${VERSION["BRANCH"]}"

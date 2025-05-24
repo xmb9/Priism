@@ -1,0 +1,112 @@
+#!/bin/bash -l
+
+declare -A VERSION
+
+VERSION["NAME"]="Pint"
+VERSION["NUMBER"]="1.0"
+VERSION["STRING"]="${VERSION[NAME]} v${VERSION[NUMBER]}"
+
+COLOR_RESET="\033[0m"
+COLOR_BLACK_B="\033[1;30m"
+COLOR_RED_B="\033[1;31m"
+COLOR_GREEN="\033[0;32m"
+COLOR_GREEN_B="\033[1;32m"
+COLOR_YELLOW="\033[0;33m"
+COLOR_YELLOW_B="\033[1;33m"
+COLOR_BLUE_B="\033[1;34m"
+COLOR_MAGENTA_B="\033[1;35m"
+COLOR_CYAN_B="\033[1;36m"
+
+echo -e "Starting up ${COLOR_GREEN_B}${VERSION["STRING"]}${COLOR_RESET} on ${COLOR_BLUE_B}$(/bin/busybox uname -o) $(/bin/busybox uname -r)${COLOR_RESET}"
+
+services="/usr/share/pint/pint.d/"
+handoffConfig="/usr/share/pint/handoff.conf"
+defaultHandoff="/usr/sbin/sh1mmer_main.sh"
+
+log() {
+	local level="$1"
+	local message="$2"
+	echo -e "[$level] $message"
+	echo -e "[$level] $message" > /dev/kmsg
+}
+
+nextHandoff=
+sourceHandoff=false
+
+hang() {
+	echo "Halting."
+	while :; do sleep 1d; done
+}
+
+detectHandoff() {
+	if [[ -f "$handoffConfig" && -s "$handoffConfig" ]]; then
+		nextHandoff=$(cat "$handoffConfig" | /bin/busybox xargs)
+		log "${COLOR_GREEN_B}OK${COLOR_RESET}" "Found handoff as $nextHandoff"
+	else
+		log "${COLOR_YELLOW_B}WARN${COLOR_RESET}" "Handoff Config does not exist! Fallback to default."
+		nextHandoff="$defaultHandoff"
+	fi
+
+	if /bin/busybox head -n 1 "$nextHandoff" | /bin/busybox grep -q '^#!'; then
+		log "${COLOR_GREEN_B}OK${COLOR_RESET}" "Handoff is a shell script. Will be sourced."
+		sourceHandoff=true
+	fi
+
+	if [ ! -x "$nextHandoff" ] && [ "$sourceHandoff" == false ]; then
+		log "${COLOR_RED_B}ERROR${COLOR_RESET}" "Handoff does not exist or is not executable."
+		hang
+	fi
+}
+
+runServices() {
+	local path="$1"
+
+	if [[ ! -d "$path" ]]; then
+		log "${COLOR_RED_B}ERROR${COLOR_RESET}" "Services path $path does not exist or is not a directory"
+		return
+	fi
+
+	services=($(ls -v "$path"/* 2>/dev/null))
+
+	if [[ ${#services[@]} -eq 0 ]]; then
+		log "${COLOR_YELLOW_B}WARN${COLOR_RESET}" "No services found in $path"
+		return
+	fi
+
+	for i in "${!services[@]}"; do
+		s="${services[$i]}"
+		if [[ -x "$s" ]]; then
+			log "..." "($((i+1))/${#services[@]}) Starting service $s"
+			"$s"
+			if [[ $? -ne 0 ]]; then
+				log "${COLOR_RED_B}ERROR${COLOR_RESET}" "Failure running service $s"
+				hang
+			else
+				log "${COLOR_GREEN_B}OK${COLOR_RESET}" "Started service $s"
+			fi
+		else
+			log "${COLOR_RED_B}ERROR${COLOR_RESET}" "Service $s is not an executable!"
+			hang
+		fi
+	done
+}
+
+launchHandoff() {
+	local init_path="$1"
+
+	if [ "$sourceHandoff" = true ]; then
+		log "${COLOR_GREEN_B}OK${COLOR_RESET}" "Sourcing handoff $init_path"
+		source "$init_path"
+	else
+		log "${COLOR_GREEN_B}OK${COLOR_RESET}" "Starting handoff $init_path"
+		exec "$init_path"
+	fi
+
+	log "${COLOR_RED_B}ERROR${COLOR_RESET}" "Something went wrong during handoff"
+	hang
+}
+
+/usr/bin/setsid -c test # Prevent CTRL + C on init
+detectHandoff
+runServices "$services"
+launchHandoff "$nextHandoff"

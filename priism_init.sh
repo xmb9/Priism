@@ -13,7 +13,7 @@ ARCHITECTURE="${4:-x86_64}"
 
 ROOTFS_DEV=
 
-SCRIPT_DATE="[2025-5-21]"
+SCRIPT_DATE="[2025-5-24]"
 
 COLOR_RESET="\033[0m"
 COLOR_BLACK_B="\033[1;30m"
@@ -138,6 +138,7 @@ if [ "$SKIP_SH1MMER_PATCH" -eq 0 ]; then
 	echo "Copying Priism files..."
 	pv_dircopy "$STATEFUL_MNT/root/noarch" "$NEWROOT_MNT" || :
 	pv_dircopy "$STATEFUL_MNT/root/$ARCHITECTURE" "$NEWROOT_MNT" || :
+	cp /bin/busybox "$NEWROOT_MNT/bin/busybox"
 	echo ""
 fi
 
@@ -167,7 +168,7 @@ move_mounts() {
 move_mounts
 echo "exec switch_root"
 echo "this shouldn't take more than a few seconds"
-exec switch_root "$NEWROOT_MNT" /sbin/priisminit -v --default-console output || :
+exec switch_root "$NEWROOT_MNT" /sbin/init -v --default-console output || :
 EOF
 chmod +x /bin/sh1mmer_switch_root
 
