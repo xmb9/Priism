@@ -147,7 +147,12 @@ mkdir /mnt/recoroot
 priism_images="/dev/disk/by-label/PRIISM_IMAGES"
 priism_disk=$(echo /dev/$(lsblk -ndo pkname ${priism_images} || echo -e "${COLOR_YELLOW_B}Warning${COLOR_RESET}: Failed to enumerate disk! Resizing will most likely fail."))
 
-board_name="$(cat /sys/devices/virtual/dmi/id/board_name || fail "Could not get board name!" | head -n 1)"
+board_name="$(cat /sys/devices/virtual/dmi/id/board_name | head -n 1)"
+if ! [ $? -eq 0 ]; then
+	echo -e "${COLOR_YELLOW_B}Board name detection failed. This isn't that big of an issue.${COLOR_RESET}"
+ 	board_name=""
+fi
+
 source /etc/lsb-release 2&> /dev/null
 
 mount $priism_images /mnt/priism || fail "Failed to mount PRIISM_IMAGES partition!"
