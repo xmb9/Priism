@@ -423,7 +423,8 @@ installcros() {
 	  		mount --make-slave "./${d}"
 		done
   		local cros_dev="$(get_largest_cros_blockdev)" # not that important
-		chroot ./ /usr/sbin/chromeos-install --payload_image "${loop}" --use_payload_kern_b --yes || fail "Failed during chroot!"
+		export IS_RECOVERY_INSTALL=1
+		chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --use_payload_kern_b --yes || fail "Failed during chroot!"
 		# Juusst in case.
 		cgpt add -i 2 $cros_dev -P 15 -T 15 -S 1 -R 1
 		echo -e "${COLOR_GREEN}\n"
