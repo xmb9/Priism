@@ -309,7 +309,7 @@ shimboot() {
 		if ! stateful="$(cgpt find -l STATE ${loop} | head -n 1 | grep --color=never /dev/)"; then
 			echo -e "${COLOR_YELLOW_B}Finding stateful via partition label \"STATE\" failed (try 1...)${COLOR_RESET}"
 			if ! stateful="$(cgpt find -l SH1MMER ${loop} | head -n 1 | grep --color=never /dev/)"; then
-				echo -e "${COLOR_YELLOW_B} Finding stateful via partition label \"SH1MMER\" failed (try 2...)${COLOR_RESET}"
+				echo -e "${COLOR_YELLOW_B}Finding stateful via partition label \"SH1MMER\" failed (try 2...)${COLOR_RESET}"
 
 				for dev in "$loop"*; do
 					[[ -b "$dev" ]] || continue
@@ -322,7 +322,7 @@ shimboot() {
 			fi
 		fi
 		if [[ -z "${stateful// }" ]]; then
-			echo -e "${COLOR_RED_B} Finding stateful via partition type \"Linux data\" failed! (try 3...)${COLOR_RESET}"
+			echo -e "${COLOR_RED_B}Finding stateful via partition type \"Linux data\" failed! (try 3...)${COLOR_RESET}"
 			echo -e "Last resort (try 4...)"
 			stateful="${loop}p1"
 		fi
@@ -422,11 +422,14 @@ installcros() {
 	  		mount -n --bind "${d}" "./${d}"
 	  		mount --make-slave "./${d}"
 		done
-  		local cros_dev="$(get_largest_cros_blockdev)" # not that important
+		local cros_dev="$(get_largest_cros_blockdev)"
+		if [ -z "$cros_dev" ]; then
+			echo -e "${COLOR_YELLOW_B}No ChromeOS drive was found on the device! Please make sure ChromeOS is installed before using Priism. Continuing anyway...${COLOR_RESET}"
+		fi
 		export IS_RECOVERY_INSTALL=1
-		chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --use_payload_kern_b --yes || fail "Failed during chroot!"
+		chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --yes || fail "Failed during chroot!"
 		# Juusst in case.
-		cgpt add -i 2 $cros_dev -P 15 -T 15 -S 1 -R 1
+		cgpt add -i 2 $cros_dev -P 15 -T 15 -S 1 -R 1 || echo -e "${COLOR_YELLOW_B}Failed to set kernel priority! Continuing anyway.${COLOR_RESET}"
 		echo -e "${COLOR_GREEN}\n"
 		read -p "Recovery finished. Press any key to reboot."
 		reboot
