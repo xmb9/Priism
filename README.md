@@ -15,6 +15,16 @@ Mirrors with a star next to them may not have all boards uploaded yet.
 
 # FAQ (Frequently Asked Questions)
 <details>
+  <summary><b>How do I update without reflashing?</b></summary>
+
+  This requires a device to build on.
+  
+  1: Copy a SH1MMER legacy (Feb 2024+) image to where you downloaded the repo
+
+  2: Run this command: ``sudo bash update_device.sh path/to/sh1mmer.bin /dev/XXX``, where ``/dev/XXX`` is your USB/sd card. You can find this with ``lsblk``.
+</details>
+
+<details>
   <summary><b>I wanna use Shimboot. How can I?</b></summary>
 
   Use the [respective Shimboot fork for Priism](https://github.com/xmb9/shimboot-priism).
