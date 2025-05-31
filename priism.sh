@@ -269,7 +269,8 @@ shimboot() {
 
 		loop_root="$(cgpt find -l ROOT-A $loop || cgpt find -t rootfs $loop)"
   		loop_root="$(echo $loop_root | head -n 1)" # there's probably way better ways to do this but i'm lazy
-
+		loop_root="$(echo $loop_root | awk '{print $1}')" 
+  
 		if mount "${loop_root}" $shimroot; then
 			echo -e "ROOT-A found successfully and mounted."
 		else
