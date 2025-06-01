@@ -366,6 +366,10 @@ shimboot() {
 			pivot_root /newroot /newroot/tmp/priism
 
 			echo "Starting init"
+   			if [ -f "/bin/kvs" ]; then
+        			exec /bin/kvs
+			fi
+
 			exec /sbin/init || {
 				echo "Failed to start init!!!"
 				echo "Bailing out, you are on your own. Good luck."
