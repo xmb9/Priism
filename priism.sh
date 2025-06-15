@@ -65,14 +65,14 @@ get_largest_cros_blockdev() {
 }
 
 funText() {
-	splashText=("       Triangle is love, triangle is life." "             Placeholder splash text" "    The lower tape fade meme is still massive" "               Now in TUI format!" " The average reaction after talking with fanqyxl" " Discord speech impediment... oh wait that's AC3")
+	splashText=("       Triangle is love, triangle is life." "             Placeholder splash text" "    The lower tape fade meme is still massive" "               Now in TUI format!" " The average reaction after talking with fanqyxl" "Discord speech impediment... oh wait that's 2468")
   	selectedSplashText=${splashText[$RANDOM % ${#splashText[@]}]}
 	echo -e " "
    	echo -e "$selectedSplashText"
 }
 
 funTextbutGay() {
-	splashText=("Triangle is love, triangle is life." "Placeholder splash text" "The lower tape fade meme is still massive" "Now in TUI format!" "The average reaction after talking with fanqyxl" "Discord speech impediment... oh wait that's AC3")
+	splashText=("Triangle is love, triangle is life." "Placeholder splash text" "The lower tape fade meme is still massive" "Now in TUI format!" "The average reaction after talking with fanqyxl" "Discord speech impediment... oh wait that's 2468")
   	selectedSplashText=${splashText[$RANDOM % ${#splashText[@]}]}
    	echo -e "$selectedSplashText"
 }
