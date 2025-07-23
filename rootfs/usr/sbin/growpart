@@ -16,6 +16,7 @@
 #
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# Modified 2025 by soap phia
 
 # the fudge factor. if within this many bytes dont bother
 FUDGE=${GROWPART_FUDGE:-$((1024*1024))}
@@ -141,9 +142,11 @@ ${0##*/} disk partition
 
    Example:
     - ${0##*/} /dev/sda 1
+    - ${0##*/} /dev/sda1
       Resize partition 1 on /dev/sda
 
     - ${0##*/} --free-percent=10 /dev/sda 1
+    - ${0##*/} --free-percent=10 /dev/sda1
       Resize partition 1 on /dev/sda so that 10% of the disk is unallocated
 EOF
 }
@@ -977,19 +980,32 @@ while [ $# -ne 0 ]; do
 		-*)
 			fail "unknown option ${cur}"
 			;;
-		*)
-			if [ -z "${DISK}" ]; then
-				DISK=${cur}
-			else
-				[ -z "${PART}" ] || fail "confused by arg ${cur}"
-				PART=${cur}
-			fi
-			;;
+        *)
+            if [ -z "${DISK}" ]; then
+                case "$cur" in
+                    *[!0-9]*[0-9]*)
+                        DISK=$(echo "$cur" | sed -E 's/p?[0-9]+$//')
+                        PART=$(echo "$cur" | sed -E 's/.*[^0-9]([0-9]+)$/\1/')
+                        ;;
+                    *)
+                        DISK="$cur"
+                        ;;
+                esac
+            else
+                if [ -z "${PART}" ]; then
+                    PART="${cur}"
+                fi
+            fi
+            ;;
+
 	esac
 	shift
 done
 
-[ -n "${DISK}" ] || bad_Usage "must supply disk and partition-number"
+case "$DISK" in
+  *[!0-9]*) ;;
+  *) bad_Usage "must supply disk and partition-number" ;;
+esac
 [ -n "${PART}" ] || bad_Usage "must supply partition-number"
 
 [ -e "${DISK}" ] || fail "${DISK}: does not exist"
