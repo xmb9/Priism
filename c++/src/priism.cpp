@@ -405,6 +405,9 @@ void actionShimboot(Context& ctx) {
       run({"umount", "-l", m});
     }
 
+    if (run({"umount", "/stateful"}) != 0)
+      fail("Failed to unmount stateful partition before switching root!");
+
     printf("Done.\n");
     printf(
         "About to switch root. If your screen goes black and the device "
