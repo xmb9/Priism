@@ -2,3 +2,8 @@
 *.img
 *.save
 config.mk
+# C++ build outputs
+*.o
+c++/priism
+c++/priism-init
+c++/build/

@@ -191,7 +191,15 @@ void setupImagesPartition(Context& ctx) {
            COLOR_RESET);
 
     run({"umount", ctx.priismImages});
-    run({"growpart", ctx.priismImages});  // growpart. why. why didn't you have to be different.
+
+    // resolve the by-label symlink first, growpart chokes on it otherwise
+    char resolved[4096];
+    std::string part = realpath(ctx.priismImages.c_str(), resolved)
+                           ? std::string(resolved)
+                           : ctx.priismImages;
+    // growpart. why. why didn't you have to be different.
+    if (run({"growpart", part}) != 0)
+      fail("growpart failed on " + part + "! Not resizing, bailing out.");
     run({"e2fsck", "-f", ctx.priismImages});
 
     printf(
@@ -597,12 +605,10 @@ void actionExitDebug(Context& ctx) {
 }
 
 void actionPayloads(Context& ctx) {
-  printf("Choose payload to run:\n");
   auto opts = globRegularFiles(ctx.priismMnt + "/payloads", ".sh");
   opts.push_back("Exit");
   std::string payload = menuCompat("Payloads", opts);
   if (payload.empty() || payload == "Exit") {
-    pressEnter();
     clearScreen();
     return;
   }
