@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <random>
+#include <ctime>
 
 namespace priism {
 
