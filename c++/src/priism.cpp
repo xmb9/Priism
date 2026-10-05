@@ -592,7 +592,7 @@ void actionInstallCros(Context& ctx) {
 
   printf("%s\n", COLOR_GREEN);
   pressEnter("Recovery finished. Press any key to reboot.");
-  run({"reboot"});
+  run({"reboot", "-f"});
   sleep(1);
   printf("\n%sReboot failed. Hanging...", COLOR_RED_B);
   hang();
