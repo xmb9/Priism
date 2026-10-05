@@ -498,12 +498,66 @@ void actionInstallCros(Context& ctx) {
   printf("ROOT-A found successfully and mounted.\n");
 
   std::string stateOut;
-  if (run({"cgpt", "find", "-l", "STATE", ctx.loop}, &stateOut) != 0 ||
-      trim(stateOut).empty())
+  std::string preferred;
+  if (run({"cgpt", "find", "-l", "STATE", ctx.loop}, &stateOut) == 0)
+    preferred = firstWordFirstLine(stateOut);
+  if (trim(preferred).empty())
     fail("Failed to find stateful partition on " + ctx.loop + "!");
-  std::string stateful = firstWordFirstLine(stateOut);
-  if (run({"mount", stateful, "/mnt/stateful_partition"}) != 0)
-    fail("Failed to mount stateful partition!");
+
+  mkdirP("/mnt/stateful_partition");
+
+  std::vector<std::string> candidates;
+  candidates.push_back(preferred);
+  auto addLoopDevs = [&](const std::vector<std::string>& args) {
+    std::vector<std::string> cmd = {"blkid", "-o", "device"};
+    cmd.insert(cmd.end(), args.begin(), args.end());
+    std::string out;
+    if (run(cmd, &out) != 0) return;
+    for (auto& dev : splitWs(out)) {
+      if (dev.rfind(ctx.loop, 0) != 0 || dev == preferred ||
+          dev == loopRoot)
+        continue;
+      bool dup = false;
+      for (auto& c : candidates)
+        if (c == dev) dup = true;
+      if (!dup) candidates.push_back(dev);
+    }
+  };
+  addLoopDevs({"-t", "LABEL=STATE"});
+  addLoopDevs({"-t", "TYPE=ext4"});
+
+  std::string stateful;
+  bool readOnly = false;
+  for (auto& dev : candidates) {
+    std::string type;
+    run({"blkid", "-o", "value", "-s", "TYPE", dev}, &type);
+    type = trim(type);
+    if (!type.empty()) {
+      if (run({"mount", "-t", type, dev, "/mnt/stateful_partition"}) == 0) {
+        stateful = dev;
+        break;
+      }
+    } else if (run({"mount", dev, "/mnt/stateful_partition"}) == 0) {
+      stateful = dev;
+      break;
+    }
+    if (run({"mount", "-o", "ro", dev, "/mnt/stateful_partition"}) == 0) {
+      stateful = dev;
+      readOnly = true;
+      break;
+    }
+  }
+  if (stateful.empty()) {
+    std::string tried;
+    for (auto& dev : candidates) tried += (tried.empty() ? "" : ", ") + dev;
+    fail("Failed to mount stateful partition! Tried: " + tried +
+         ". Check dmesg if possible.");
+  }
+  if (readOnly)
+    printf("WARNING: stateful mounted read-only, install may fail.\n");
+  if (stateful != preferred)
+    printf("Using %s as stateful instead of %s.\n", stateful.c_str(),
+           preferred.c_str());
 
 
   // I can't think of any other way to do this.
