@@ -1,0 +1,2 @@
+# copy this to config.mk and point SHIM_DIR at your shims
+SHIM_DIR =
