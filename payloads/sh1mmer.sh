@@ -9,4 +9,5 @@ then
 	fail "Failed to execute /sbin/init! Somehow..."
 else
 	echo "Cancelled."
+	echo -e "${COLOR_RESET}"
 fi
