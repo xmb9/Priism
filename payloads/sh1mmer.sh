@@ -5,7 +5,7 @@ echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
 	if [[ -f /usr/sbin/sh1mmer_main_old.sh ]]; then
-		cp -a -f /usr/sbin/sh1mmer_main_old.sh /usr/sbin/sh1mmer_main.sh
+		cp -f /usr/sbin/sh1mmer_main_old.sh /usr/sbin/sh1mmer_main.sh || { echo "Failed to restore sh1mmer_main; aborting."; exit 1; }
 	else
 		echo "Missing sh1mmer_main_old.sh; aborting."
 		exit 1
@@ -14,17 +14,18 @@ then
 		mv -f /bin/init_sh1mmer_old.sh /bin/init_sh1mmer.sh
 	fi
 	if [[ -f /sbin/init_sh1mmer_old_elf ]]; then
-		cp -a -f /sbin/init_sh1mmer_old_elf /sbin/init
+		cp -f /sbin/init_sh1mmer_old_elf /sbin/init || { echo "Failed to restore original init; aborting."; exit 1; }
 	elif [[ -f /usr/sbin/sh1mmer_init_old ]]; then
-		cp -a -f /usr/sbin/sh1mmer_init_old /sbin/init
+		cp -f /usr/sbin/sh1mmer_init_old /sbin/init || { echo "Failed to restore original init; aborting."; exit 1; }
 	elif [[ -f /sbin/sh1mmer_init_old ]]; then
-		cp -a -f /sbin/sh1mmer_init_old /sbin/init
+		cp -f /sbin/sh1mmer_init_old /sbin/init || { echo "Failed to restore original init; aborting."; exit 1; }
 	else
 		echo "Missing init_sh1mmer_old_elf; aborting."
 		exit 1
 	fi
-	exec /sbin/init
-	fail "Failed to execute /sbin/init! Somehow..."
+	chmod +x /sbin/init
+	touch /tmp/priism_boot_sh1mmer
+	exit 0
 else
 	echo "Cancelled."
 	echo -e "${COLOR_RESET}"

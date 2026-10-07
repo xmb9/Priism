@@ -680,7 +680,18 @@ void actionPayloads(Context& ctx) {
   setenvStr("COLOR_MAGENTA_B", COLOR_MAGENTA_B);
   setenvStr("COLOR_CYAN_B", COLOR_CYAN_B);
   setenvStr("COLOR_BLACK_B", COLOR_BLACK_B);
+  run({"rm", "-f", "/tmp/priism_boot_sh1mmer"});
   runBash("source " + shellEscape(payload));
+  if (pathExists("/tmp/priism_boot_sh1mmer")) {
+    run({"rm", "-f", "/tmp/priism_boot_sh1mmer"});
+    if (getpid() == 1) {
+      syncFs();
+      execl("/sbin/init", "/sbin/init", (char*)nullptr);
+      printf("%sFailed to hand off to SH1MMER init! Continuing...%s\n", COLOR_RED_B, COLOR_RESET);
+    } else {
+      printf("%sNot PID 1, cannot hand off to SH1MMER init.%s\n", COLOR_YELLOW_B, COLOR_RESET);
+    }
+  }
   pressEnter();
   clearScreen();
 }

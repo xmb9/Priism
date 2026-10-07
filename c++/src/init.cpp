@@ -158,13 +158,14 @@ int main(int argc, char** argv) {
 
   if (!skipPatch) {
     printf("Copying Priism files...\n");
-    runShell("cp -a " + shellEscape(g_newroot + "/sbin/init") + " /tmp/sh1mmer_init_orig >/dev/null 2>&1");
+    runShell("cp -f " + shellEscape(g_newroot + "/sbin/init") + " /tmp/sh1mmer_init_orig >/dev/null 2>&1");
     pvDircopy(g_stateful_mnt + "/root/noarch", g_newroot);
     pvDircopy(g_stateful_mnt + "/root/" + arch, g_newroot);
     run({"cp", "/bin/busybox", g_newroot + "/bin/busybox"});
-    runShell("cp -a /tmp/sh1mmer_init_orig " + shellEscape(g_newroot + "/sbin/init_sh1mmer_old_elf") + " >/dev/null 2>&1");
-    runShell("cp -a /tmp/sh1mmer_init_orig " + shellEscape(g_newroot + "/usr/sbin/sh1mmer_init_old") + " >/dev/null 2>&1");
-    runShell("cp -a /tmp/sh1mmer_init_orig " + shellEscape(g_newroot + "/sbin/sh1mmer_init_old") + " >/dev/null 2>&1");
+    runShell("cp -f /tmp/sh1mmer_init_orig " + shellEscape(g_newroot + "/sbin/init_sh1mmer_old_elf") + " >/dev/null 2>&1");
+    runShell("cp -f /tmp/sh1mmer_init_orig " + shellEscape(g_newroot + "/usr/sbin/sh1mmer_init_old") + " >/dev/null 2>&1");
+    runShell("cp -f /tmp/sh1mmer_init_orig " + shellEscape(g_newroot + "/sbin/sh1mmer_init_old") + " >/dev/null 2>&1");
+    runShell("chmod +x " + shellEscape(g_newroot + "/sbin/init_sh1mmer_old_elf") + " " + shellEscape(g_newroot + "/usr/sbin/sh1mmer_init_old") + " " + shellEscape(g_newroot + "/sbin/sh1mmer_init_old") + " >/dev/null 2>&1");
     runShell("rm -f /tmp/sh1mmer_init_orig >/dev/null 2>&1");
     printf("\n");
   }
