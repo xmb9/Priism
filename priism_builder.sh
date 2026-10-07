@@ -56,10 +56,11 @@ patch_sh1mmer() {
 		make -C "$SCRIPT_DIR/c++" || fail "C++ build failed"
 	fi
 
-	# Yeah, this seems wrong to copy an ELF to a path that has .sh as the file extension, but SH1MMER uses exec so it's whatever
+	# Yeah, this seems wrong to copy an ELF to a path that has .sh as the file extension, but SH1MMER uses exec so it's whatever	
 	log_info "Copying payload"
 	mv -f "$MNT_SH1MMER/root/noarch/usr/sbin/sh1mmer_main.sh" "$MNT_SH1MMER/root/noarch/usr/sbin/sh1mmer_main_old.sh"
-	mv -f "$MNT_SH1MMER/root/noarch/sbin/init" "$MNT_SH1MMER/root/noarch/usr/sbin/sh1mmer_init_old"
+	mv -f "$MNT_SH1MMER/init" "$MNT_SH1MMER/root/noarch/usr/sbin/sh1mmer_init_old"
+	mv -f "$MNT_SH1MMER/bootstrap/noarch/init_sh1mmer.sh" "$MNT_SH1MMER/bootstrap/noarch/init_sh1mmer_old.sh"
 	cp "$SCRIPT_DIR/c++/priism" "$MNT_SH1MMER/root/noarch/usr/sbin/sh1mmer_main.sh"
 	cp "$SCRIPT_DIR/c++/priism-init" "$MNT_SH1MMER/bootstrap/noarch/init_sh1mmer.sh"
 	mkdir -p "$MNT_SH1MMER/root/noarch/sbin/" # half the time this doesn't exist. make it.

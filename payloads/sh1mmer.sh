@@ -12,6 +12,10 @@ then
 	fi
 	if [[ -f /usr/sbin/sh1mmer_init_old ]]; then
 		mv -f /usr/sbin/sh1mmer_init_old /sbin/init
+	elif [[ -f /sbin/sh1mmer_init_old ]]; then
+		mv -f /sbin/sh1mmer_init_old /sbin/init
+	elif [[ -f /bootstrap/noarch/init_sh1mmer_old.sh ]]; then
+		mv -f /bootstrap/noarch/init_sh1mmer_old.sh /bootstrap/noarch/init_sh1mmer.sh
 	else
 		echo "Missing sh1mmer_init_old; aborting."
 		exit 1
