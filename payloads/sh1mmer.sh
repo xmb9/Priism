@@ -1,7 +1,7 @@
 #!/bin/bash
 echo -e "${COLOR_YELLOW_B}You will not be able to return to Priism again in this session once you do this!"
 read -p "Press 'y' to continue." -n 1 -r
-echo
+echo -e "${COLOR_RESET}"
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
 	if [[ -f /usr/sbin/sh1mmer_main_old.sh ]]; then
@@ -28,5 +28,4 @@ then
 	exit 0
 else
 	echo "Cancelled."
-	echo -e "${COLOR_RESET}"
 fi
