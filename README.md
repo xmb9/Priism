@@ -20,7 +20,7 @@ Soon?
   
   1: Copy a SH1MMER legacy (Feb 2024+) image to where you downloaded the repo
 
-  2: Run this command: ``sudo bash update_device.sh path/to/priism.bin /dev/XXX``, where ``/dev/XXX`` is your USB/sd card. You can find this with ``lsblk``.
+  2: Run this command: ``sudo bash update_device.sh path/to/sh1mmer.bin /dev/XXX``, where ``/dev/XXX`` is your USB/sd card. You can find this with ``lsblk``.
 </details>
 
 <details>

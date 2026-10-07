@@ -7,3 +7,5 @@ config.mk
 c++/priism
 c++/priism-init
 c++/build/
+.vscode/settings.json
+.vscode/

@@ -59,6 +59,7 @@ patch_sh1mmer() {
 	# Yeah, this seems wrong to copy an ELF to a path that has .sh as the file extension, but SH1MMER uses exec so it's whatever
 	log_info "Copying payload"
 	mv "$MNT_SH1MMER/root/noarch/usr/sbin/sh1mmer_main.sh" "$MNT_SH1MMER/root/noarch/usr/sbin/sh1mmer_main_old.sh"
+	mv "$MNT_SH1MMER/root/noarch/sbin/init" "$MNT_SH1MMER/root/noarch/usr/sbin/sh1mmer_init_old"
 	cp "$SCRIPT_DIR/c++/priism" "$MNT_SH1MMER/root/noarch/usr/sbin/sh1mmer_main.sh"
 	cp "$SCRIPT_DIR/c++/priism-init" "$MNT_SH1MMER/bootstrap/noarch/init_sh1mmer.sh"
 	mkdir -p "$MNT_SH1MMER/root/noarch/sbin/" # half the time this doesn't exist. make it.
