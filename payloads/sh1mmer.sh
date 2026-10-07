@@ -5,7 +5,7 @@ echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
 	if [[ -f /usr/sbin/sh1mmer_main_old.sh ]]; then
-		mv -f /usr/sbin/sh1mmer_main_old.sh /usr/sbin/sh1mmer_main.sh
+		cp -a -f /usr/sbin/sh1mmer_main_old.sh /usr/sbin/sh1mmer_main.sh
 	else
 		echo "Missing sh1mmer_main_old.sh; aborting."
 		exit 1
