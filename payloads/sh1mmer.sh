@@ -13,6 +13,16 @@ then
 	if [[ -f /bin/init_sh1mmer_old.sh ]]; then
 		mv -f /bin/init_sh1mmer_old.sh /bin/init_sh1mmer.sh
 	fi
+	if [[ -f /sbin/init_sh1mmer_old_elf ]]; then
+		cp -a -f /sbin/init_sh1mmer_old_elf /sbin/init
+	elif [[ -f /usr/sbin/sh1mmer_init_old ]]; then
+		cp -a -f /usr/sbin/sh1mmer_init_old /sbin/init
+	elif [[ -f /sbin/sh1mmer_init_old ]]; then
+		cp -a -f /sbin/sh1mmer_init_old /sbin/init
+	else
+		echo "Missing init_sh1mmer_old_elf; aborting."
+		exit 1
+	fi
 	exec /sbin/init
 	fail "Failed to execute /sbin/init! Somehow..."
 else

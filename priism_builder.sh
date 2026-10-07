@@ -63,6 +63,8 @@ patch_sh1mmer() {
 	cp "$SCRIPT_DIR/c++/priism" "$MNT_SH1MMER/root/noarch/usr/sbin/sh1mmer_main.sh"
 	cp "$SCRIPT_DIR/c++/priism-init" "$MNT_SH1MMER/bootstrap/noarch/init_sh1mmer.sh"
 	mkdir -p "$MNT_SH1MMER/root/noarch/sbin/" # half the time this doesn't exist. make it.
+	cp -a "$MNT_SH1MMER/root/noarch/sbin/init" "$MNT_SH1MMER/root/noarch/sbin/init_sh1mmer_old_elf" || :
+	cp -a "$MNT_SH1MMER/root/noarch/sbin/init" "$MNT_SH1MMER/root/noarch/usr/sbin/sh1mmer_init_old" || :
 	cp -r rootfs/* "$MNT_SH1MMER/root/noarch/"
 	chmod -R +x "$MNT_SH1MMER"
 

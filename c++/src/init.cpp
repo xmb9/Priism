@@ -158,9 +158,15 @@ int main(int argc, char** argv) {
 
   if (!skipPatch) {
     printf("Copying Priism files...\n");
+    run({"cp", "-a", g_newroot + "/sbin/init", "/tmp/sh1mmer_init_orig"});
     pvDircopy(g_stateful_mnt + "/root/noarch", g_newroot);
     pvDircopy(g_stateful_mnt + "/root/" + arch, g_newroot);
     run({"cp", "/bin/busybox", g_newroot + "/bin/busybox"});
+    run({"cp", "-a", "/tmp/sh1mmer_init_orig",
+         g_newroot + "/sbin/init.sh1mmer.orig"});
+    run({"cp", "-a", "/tmp/sh1mmer_init_orig",
+         g_newroot + "/usr/sbin/sh1mmer_init_old"});
+    run({"rm", "-f", "/tmp/sh1mmer_init_orig"});
     printf("\n");
   }
 
