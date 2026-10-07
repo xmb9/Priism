@@ -163,7 +163,7 @@ int main(int argc, char** argv) {
     pvDircopy(g_stateful_mnt + "/root/" + arch, g_newroot);
     run({"cp", "/bin/busybox", g_newroot + "/bin/busybox"});
     run({"cp", "-a", "/tmp/sh1mmer_init_orig",
-         g_newroot + "/sbin/init.sh1mmer.orig"});
+         g_newroot + "/sbin/init_sh1mmer_old_elf"});
     run({"cp", "-a", "/tmp/sh1mmer_init_orig",
          g_newroot + "/usr/sbin/sh1mmer_init_old"});
     run({"rm", "-f", "/tmp/sh1mmer_init_orig"});
